@@ -93,7 +93,7 @@ button{font-family:inherit;cursor:pointer;}
 #app{width:100%;}
 .frame{width:100%;max-width:1400px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
 .platform{display:none;}
-.platform.active{display:block;}
+.platform.active{display:flex;flex-direction:column;min-height:100vh;}
 
 /* ===================== STUDENT ===================== */
 #student-app .topbar{
@@ -118,7 +118,7 @@ button{font-family:inherit;cursor:pointer;}
 .app.mobile .searchbar{display:none;}
 .app.mobile .mobile-searchbar .searchbar{display:flex;}
 
-.body-layout{display:flex;align-items:flex-start;}
+.body-layout{display:flex;align-items:flex-start;flex:1;}
 .sidebar{width:196px;flex-shrink:0;padding:20px 14px;position:sticky;top:64px;}
 .app.mobile .sidebar{display:none;}
 .sidebar h4{font-size:11px;letter-spacing:.05em;color:var(--muted);margin-bottom:10px;font-family:'IBM Plex Mono';}
