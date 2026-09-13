@@ -236,6 +236,13 @@ button{font-family:inherit;cursor:pointer;}
 .btn.ghost{background:transparent;color:var(--ink);box-shadow:none;}
 .modal-close{position:absolute;top:14px;right:14px;z-index:5;font-size:18px;background:#fff;border:1.5px solid var(--ink);width:30px;height:30px;border-radius:50%;line-height:1;}
 
+/* lightbox (image zoom) */
+.lightbox{position:fixed;inset:0;background:rgba(10,11,14,.9);display:none;align-items:center;justify-content:center;z-index:400;padding:24px;cursor:zoom-out;}
+.lightbox.show{display:flex;}
+.lightbox img{max-width:95vw;max-height:92vh;border-radius:12px;cursor:default;box-shadow:0 20px 50px rgba(0,0,0,.5);}
+.lightbox-close{position:absolute;top:20px;right:24px;color:#fff;font-size:26px;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.15);}
+.img-zoomable{cursor:zoom-in;}
+
 /* lists */
 .order-item, .fav-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:var(--shadow-sm);}
 .app.desktop .list-view{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
@@ -586,6 +593,11 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
 
       <div class="overlay" id="announce-overlay">
         <div class="modal" id="announce-modal"></div>
+      </div>
+
+      <div class="lightbox" id="lightbox-overlay" onclick="closeLightbox()">
+        <span class="lightbox-close" onclick="closeLightbox()">✕</span>
+        <img id="lightbox-img" src="" onclick="event.stopPropagation()">
       </div>
     </div>
 
@@ -963,7 +975,7 @@ function openProduct(id){
     <button class="modal-close" onclick="closeProduct()">✕</button>
     <div class="modal-handle"></div>
     <div class="modal-layout">
-      <div class="modal-media"><div class="modal-thumb ${cc.t}">${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" onerror="this.style.display='none'">` : ''}</div></div>
+      <div class="modal-media"><div class="modal-thumb ${cc.t}">${p.image ? `<img src="${p.image}" class="img-zoomable" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" onclick="event.stopPropagation();openLightbox('${p.image}')" onerror="this.style.display='none'">` : ''}</div></div>
       <div class="modal-info">
         <h3>${p.title}</h3>
         <div class="modal-vendor">${p.vendor} · ${p.cat}</div>
@@ -1025,7 +1037,7 @@ function openAnnounceDetail(id){
   document.getElementById('announce-modal').innerHTML = `
     <button class="modal-close" onclick="closeAnnounceDetail()">✕</button>
     <div class="modal-handle"></div>
-    ${a.image ? `<img src="${a.image}" style="width:100%;border-radius:16px;margin-bottom:16px;border:1px solid var(--line);" onerror="this.style.display='none'">` : ''}
+    ${a.image ? `<img src="${a.image}" class="img-zoomable" style="width:100%;border-radius:16px;margin-bottom:16px;border:1px solid var(--line);" onclick="openLightbox('${a.image}')" onerror="this.style.display='none'">` : ''}
     <div class="a-top" style="margin-bottom:8px;"><span class="a-type ${a.type}">${a.label}</span><span class="a-date">${a.date}</span></div>
     <h3 style="margin-bottom:10px;">${a.title}</h3>
     <div class="desc" style="white-space:pre-wrap;">${a.desc}</div>
@@ -1643,6 +1655,14 @@ async function toggleTheme(){
 /* =========================================================
    啟動流程
 ========================================================= */
+function openLightbox(src){
+  if(!src) return;
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox-overlay').classList.add('show');
+}
+function closeLightbox(){
+  document.getElementById('lightbox-overlay').classList.remove('show');
+}
 function toast(msg, type){
   const t = document.getElementById('toast');
   const icon = type==='error' ? '⚠️' : '✓';
