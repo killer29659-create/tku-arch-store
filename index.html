@@ -963,7 +963,7 @@ function openProduct(id){
     <button class="modal-close" onclick="closeProduct()">✕</button>
     <div class="modal-handle"></div>
     <div class="modal-layout">
-      <div class="modal-media"><div class="modal-thumb ${cc.t}">${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" onerror="this.parentElement.innerHTML='${p.icon}'">` : p.icon}</div></div>
+      <div class="modal-media"><div class="modal-thumb ${cc.t}">${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" onerror="this.style.display='none'">` : ''}</div></div>
       <div class="modal-info">
         <h3>${p.title}</h3>
         <div class="modal-vendor">${p.vendor} · ${p.cat}</div>
@@ -1280,9 +1280,8 @@ function openProductForm(id){
     <div class="field"><label>標題</label><input id="pf-title" value="${p?p.title:''}" placeholder="例如:針筆繪圖工具組"></div>
     <div class="field-row">
       <div class="field"><label>分類</label><select id="pf-cat">${['廣告','書展','工具','材料','課程'].map(c=>`<option ${p&&p.cat===c?'selected':''}>${c}</option>`).join('')}</select></div>
-      <div class="field"><label>圖示(emoji)</label><input id="pf-icon" value="${p?p.icon:'📦'}"></div>
     </div>
-    <div class="field"><label>圖片網址(選填,有填會取代表情符號顯示)</label><input id="pf-image" value="${p?(p.image||''):''}" placeholder="貼上圖片連結(如Google Drive公開連結)"></div>
+    <div class="field"><label>圖片網址(選填)</label><input id="pf-image" value="${p?(p.image||''):''}" placeholder="貼上圖片連結(如Google Drive公開連結)"></div>
     <div class="field"><label>廠商名稱</label><input id="pf-vendor" value="${p?p.vendor:''}" placeholder="廠商/店家名稱"></div>
     <div class="field-row">
       <div class="field"><label>單價</label><input id="pf-price" type="number" value="${p?p.price:0}"></div>
@@ -1298,7 +1297,6 @@ async function saveProduct(id){
   const title = document.getElementById('pf-title').value.trim();
   if(!title){ toast('請輸入標題', 'error'); return; }
   const cat = document.getElementById('pf-cat').value;
-  const icon = document.getElementById('pf-icon').value.trim() || '📦';
   const image = document.getElementById('pf-image').value.trim();
   const vendor = document.getElementById('pf-vendor').value.trim();
   const price = Number(document.getElementById('pf-price').value) || 0;
@@ -1307,10 +1305,10 @@ async function saveProduct(id){
   const fileUrl = document.getElementById('pf-file').value.trim();
   if(id){
     const p = products.find(x=>x.id===id);
-    Object.assign(p, {title, cat, icon, image, vendor, price, stock, desc, fileUrl, tag: stock===0?'soldout':'', tagLabel: stock===0?'已完售':''});
+    Object.assign(p, {title, cat, image, vendor, price, stock, desc, fileUrl, tag: stock===0?'soldout':'', tagLabel: stock===0?'已完售':''});
   } else {
     const newId = Math.max(0,...products.map(x=>x.id), 0) + 1;
-    products.push({id:newId, title, cat, icon, image, vendor, price, stock, desc, fileUrl, tag:'', tagLabel:''});
+    products.push({id:newId, title, cat, image, vendor, price, stock, desc, fileUrl, tag:'', tagLabel:''});
   }
   await sSet('products-list', products, true);
   closeAdminModal();
