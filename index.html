@@ -959,6 +959,7 @@ function openProduct(id){
         <div class="desc">${p.desc}</div>
         <div class="modal-row"><span>單價</span><span class="mono">${p.price===0?'免費':'$'+p.price}</span></div>
         <div class="modal-row"><span>目前庫存</span><span class="mono">${p.stock}</span></div>
+        ${p.fileUrl ? `<a href="${p.fileUrl}" target="_blank" rel="noopener" class="btn ghost" style="border:1.5px solid var(--ink);display:block;text-align:center;text-decoration:none;margin-top:10px;">📎 查看附件/書單</a>` : ''}
         ${p.stock>0 ? `
         <div class="qty-row">
           <span style="font-size:13px">購買數量</span>
@@ -1017,6 +1018,7 @@ function openAnnounceDetail(id){
     <div class="a-top" style="margin-bottom:8px;"><span class="a-type ${a.type}">${a.label}</span><span class="a-date">${a.date}</span></div>
     <h3 style="margin-bottom:10px;">${a.title}</h3>
     <div class="desc" style="white-space:pre-wrap;">${a.desc}</div>
+    ${a.fileUrl ? `<a href="${a.fileUrl}" target="_blank" rel="noopener" class="btn ghost" style="border:1.5px solid var(--ink);display:block;text-align:center;margin-top:6px;text-decoration:none;">📎 查看附件</a>` : ''}
   `;
   document.getElementById('announce-overlay').classList.add('show');
 }
@@ -1275,6 +1277,7 @@ function openProductForm(id){
       <div class="field"><label>庫存</label><input id="pf-stock" type="number" value="${p?p.stock:10}"></div>
     </div>
     <div class="field"><label>說明</label><textarea id="pf-desc">${p?p.desc:''}</textarea></div>
+    <div class="field"><label>附件連結(選填,如書單/型錄PDF)</label><input id="pf-file" value="${p?(p.fileUrl||''):''}" placeholder="貼上檔案連結(如Google Drive公開連結)"></div>
     <button class="btn primary" onclick="saveProduct(${p?p.id:'null'})">${p?'儲存變更':'新增商品'}</button>
   `;
   document.getElementById('admin-modal-overlay').classList.add('show');
@@ -1288,12 +1291,13 @@ async function saveProduct(id){
   const price = Number(document.getElementById('pf-price').value) || 0;
   const stock = Number(document.getElementById('pf-stock').value) || 0;
   const desc = document.getElementById('pf-desc').value.trim();
+  const fileUrl = document.getElementById('pf-file').value.trim();
   if(id){
     const p = products.find(x=>x.id===id);
-    Object.assign(p, {title, cat, icon, vendor, price, stock, desc, tag: stock===0?'soldout':'', tagLabel: stock===0?'已完售':''});
+    Object.assign(p, {title, cat, icon, vendor, price, stock, desc, fileUrl, tag: stock===0?'soldout':'', tagLabel: stock===0?'已完售':''});
   } else {
     const newId = Math.max(0,...products.map(x=>x.id), 0) + 1;
-    products.push({id:newId, title, cat, icon, vendor, price, stock, desc, tag:'', tagLabel:''});
+    products.push({id:newId, title, cat, icon, vendor, price, stock, desc, fileUrl, tag:'', tagLabel:''});
   }
   await sSet('products-list', products, true);
   closeAdminModal();
@@ -1335,7 +1339,8 @@ function openAnnouncementForm(id){
     <h3>${a?'編輯公告':'新增公告'}</h3>
     <div class="field"><label>類型</label><select id="af-type">${typeMap.map(([v,l])=>`<option value="${v}" ${a&&a.type===v?'selected':''}>${l}</option>`).join('')}</select></div>
     <div class="field"><label>標題</label><input id="af-title" value="${a?a.title:''}" placeholder="公告標題"></div>
-    <div class="field"><label>圖片網址(選填)</label><input id="af-image" value="${a?(a.image||''):''}" placeholder="貼上圖片連結,例如 https://..."></div>
+    <div class="field"><label>圖片網址(選填)</label><input id="af-image" value="${a?(a.image||''):''}" placeholder="貼上圖片連結(如Google Drive公開連結)"></div>
+    <div class="field"><label>附件連結(選填,如活動海報PDF)</label><input id="af-file" value="${a?(a.fileUrl||''):''}" placeholder="貼上檔案連結(如Google Drive公開連結)"></div>
     <div class="field"><label>日期標示文字</label><input id="af-date" value="${a?a.date:''}" placeholder="例如:09/20 截止"></div>
     <div class="field"><label>說明</label><textarea id="af-desc">${a?a.desc:''}</textarea></div>
     <button class="btn primary" onclick="saveAnnouncement(${a?a.id:'null'})">${a?'儲存變更':'新增公告'}</button>
@@ -1350,12 +1355,13 @@ async function saveAnnouncement(id){
   const date = document.getElementById('af-date').value.trim();
   const desc = document.getElementById('af-desc').value.trim();
   const image = document.getElementById('af-image').value.trim();
+  const fileUrl = document.getElementById('af-file').value.trim();
   if(id){
     const a = announcements.find(x=>x.id===id);
-    Object.assign(a, {type, label:labelMap[type], date, desc, title, image});
+    Object.assign(a, {type, label:labelMap[type], date, desc, title, image, fileUrl});
   } else {
     const newId = Math.max(0,...announcements.map(x=>x.id), 0) + 1;
-    announcements.push({id:newId, type, label:labelMap[type], date, title, desc, image});
+    announcements.push({id:newId, type, label:labelMap[type], date, title, desc, image, fileUrl});
   }
   await sSet('announcements-list', announcements, true);
   closeAdminModal();
@@ -1419,7 +1425,11 @@ function renderAdminWishes(){
       <td>${w.title}${w.desc?'<div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px;">'+w.desc+'</div>':''}</td>
       <td>${w.cat}</td><td class="mono">${w.votes}</td>
       <td><span class="wish-status ${w.status}">${w.statusLabel}</span></td>
-      <td><button class="btn-sm outline" onclick="cycleWishStatus(${w.id})">標記為「${cycle[w.status][1]}」</button></td>
+      <td>
+        <button class="btn-sm outline" onclick="cycleWishStatus(${w.id})">標記為「${cycle[w.status][1]}」</button>
+        <button class="btn-sm outline" onclick="openWishForm(${w.id})">編輯</button>
+        <button class="btn-sm outline danger-text" onclick="deleteWish(${w.id})">刪除</button>
+      </td>
     </tr>`).join('') || '<tr><td colspan="5" class="mono" style="color:var(--muted)">尚無許願</td></tr>';
 }
 async function cycleWishStatus(id){
@@ -1430,6 +1440,44 @@ async function cycleWishStatus(id){
   await sSet('wishes-list', wishes, true);
   renderAdminWishes();
   toast('已更新許願狀態');
+}
+function openWishForm(id){
+  const w = wishes.find(x=>x.id===id);
+  document.getElementById('admin-modal-content').innerHTML = `
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3>編輯許願</h3>
+    <div class="field"><label>想要的廠商 / 商品</label><input id="wf-title" value="${w.title}"></div>
+    <div class="field"><label>分類</label>
+      <select id="wf-cat">${['廣告','書展','工具','材料','課程','其他'].map(c=>`<option ${w.cat===c?'selected':''}>${c}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>說明</label><textarea id="wf-desc">${w.desc||''}</textarea></div>
+    <div class="field"><label>附議數</label><input id="wf-votes" type="number" value="${w.votes}"></div>
+    <button class="btn primary" onclick="saveWish(${w.id})">儲存變更</button>
+  `;
+  document.getElementById('admin-modal-overlay').classList.add('show');
+}
+async function saveWish(id){
+  const w = wishes.find(x=>x.id===id);
+  const title = document.getElementById('wf-title').value.trim();
+  if(!title){ toast('請輸入標題', 'error'); return; }
+  w.title = title;
+  w.cat = document.getElementById('wf-cat').value;
+  w.desc = document.getElementById('wf-desc').value.trim();
+  w.votes = Number(document.getElementById('wf-votes').value) || 0;
+  await sSet('wishes-list', wishes, true);
+  closeAdminModal();
+  renderAdminWishes();
+  renderWishes();
+  toast('許願已更新');
+}
+async function deleteWish(id){
+  const w = wishes.find(x=>x.id===id);
+  if(!confirm(`確定要刪除許願「${w.title}」嗎?`)) return;
+  wishes = wishes.filter(x=>x.id!==id);
+  await sSet('wishes-list', wishes, true);
+  renderAdminWishes();
+  renderWishes();
+  toast('許願已刪除');
 }
 
 /* ---- 帳號審核 ---- */
