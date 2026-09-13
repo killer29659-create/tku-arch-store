@@ -178,7 +178,9 @@ button{font-family:inherit;cursor:pointer;}
 .announce-row{display:flex;gap:12px;overflow-x:auto;margin-bottom:22px;padding-bottom:2px;}
 .app.desktop .announce-row{display:grid;grid-template-columns:repeat(3,1fr);overflow-x:visible;}
 .app.desktop .announce-card{flex:unset;}
-.announce-card{flex:0 0 250px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow-sm);border-left-width:4px;}
+.announce-card{flex:0 0 250px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow-sm);border-left-width:4px;cursor:pointer;transition:transform .15s;overflow:hidden;}
+.announce-card:hover{transform:translateY(-2px);}
+.announce-card .a-img{width:calc(100% + 32px);margin:-14px -16px 10px;height:110px;object-fit:cover;display:block;}
 .app.mobile .announce-card{flex:0 0 220px;}
 .announce-card .a-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .announce-card .a-type{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:var(--r-full);}
@@ -188,6 +190,9 @@ button{font-family:inherit;cursor:pointer;}
 .a-important{border-left-color:var(--p1);} .a-important .a-type{background:var(--pink-tint);color:var(--p1);}
 .a-event{border-left-color:var(--violet);} .a-event .a-type{background:var(--violet-tint);color:var(--violet);}
 .a-notice{border-left-color:var(--blue);} .a-notice .a-type{background:var(--blue-tint);color:var(--blue);}
+.a-type.a-important{background:var(--pink-tint);color:var(--p1);}
+.a-type.a-event{background:var(--violet-tint);color:var(--violet);}
+.a-type.a-notice{background:var(--blue-tint);color:var(--blue);}
 
 /* modal (product) */
 .overlay{position:fixed;inset:0;background:rgba(20,22,26,.55);display:none;align-items:flex-end;justify-content:center;z-index:180;}
@@ -566,6 +571,10 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
       <div class="overlay" id="product-overlay">
         <div class="modal" id="product-modal"></div>
       </div>
+
+      <div class="overlay" id="announce-overlay">
+        <div class="modal" id="announce-modal"></div>
+      </div>
     </div>
 
     <!-- ============ ADMIN PLATFORM ============ -->
@@ -612,7 +621,7 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
                 <span class="mono" style="font-size:12px;color:var(--muted)" id="announce-count-lbl">共 0 則公告</span>
                 <button class="btn-sm accent" onclick="openAnnouncementForm()">+ 新增公告</button>
               </div>
-              <div class="table-wrap"><table id="admin-announce-table"><tr><th>類型</th><th>標題</th><th>日期標示</th><th>說明</th><th>操作</th></tr></table></div>
+              <div class="table-wrap"><table id="admin-announce-table"><tr><th>圖片</th><th>類型</th><th>標題</th><th>日期標示</th><th>說明</th><th>操作</th></tr></table></div>
             </div>
 
             <div id="a-view-orders" class="a-view" style="display:none">
@@ -745,9 +754,9 @@ const defaultProducts = [
   {id:10, cat:'課程', title:'模型攝影與後製課程', vendor:'系學會', price:600, stock:20, tag:'', tagLabel:'', icon:'📷', desc:'教你如何用手機或單眼拍出質感模型照,搭配基礎修圖技巧,適合準備作品集的同學。'},
 ];
 const defaultAnnouncements = [
-  {id:1, type:'a-important', label:'重要提醒', date:'09/20 截止', title:'2026建築書展預購倒數', desc:'書展預購將於本週日截止,超過時間將無法加入團購名單,請把握時間下單。'},
-  {id:2, type:'a-event', label:'活動快訊', date:'09/15 開放報名', title:'手繪透視技法工作坊', desc:'由學長姐帶領的免費工作坊,名額僅30人,額滿為止,欲報名請盡早下單登記。'},
-  {id:3, type:'a-notice', label:'系務公告', date:'09/17 維護', title:'雷切機暫停預約通知', desc:'系館雷射切割機將於下週三全天進行例行維護,當日暫停開放預約使用。'},
+  {id:1, type:'a-important', label:'重要提醒', date:'09/20 截止', title:'2026建築書展預購倒數', desc:'書展預購將於本週日截止,超過時間將無法加入團購名單,請把握時間下單。', image:''},
+  {id:2, type:'a-event', label:'活動快訊', date:'09/15 開放報名', title:'手繪透視技法工作坊', desc:'由學長姐帶領的免費工作坊,名額僅30人,額滿為止,欲報名請盡早下單登記。', image:''},
+  {id:3, type:'a-notice', label:'系務公告', date:'09/17 維護', title:'雷切機暫停預約通知', desc:'系館雷射切割機將於下週三全天進行例行維護,當日暫停開放預約使用。', image:''},
 ];
 const defaultWishes = [
   {id:1, title:'誠品建築設計選書專區合作', cat:'書展', desc:'希望能跟誠品談固定折扣,方便同學平常買參考書。', votes:23, status:'ws-contact', statusLabel:'系辦已聯繫中'},
@@ -993,11 +1002,25 @@ function renderOrders(){
 function renderAnnouncements(){
   document.getElementById('announce-count-txt').textContent = announcements.length;
   document.getElementById('announce-row').innerHTML = announcements.map(a=>`
-    <div class="announce-card ${a.type}">
+    <div class="announce-card ${a.type}" onclick="openAnnounceDetail(${a.id})">
+      ${a.image ? `<img class="a-img" src="${a.image}" onerror="this.style.display='none'">` : ''}
       <div class="a-top"><span class="a-type">${a.label}</span><span class="a-date">${a.date}</span></div>
       <h4>${a.title}</h4><p>${a.desc}</p>
     </div>`).join('') || '<p class="cal-empty-msg">目前沒有公告。</p>';
 }
+function openAnnounceDetail(id){
+  const a = announcements.find(x=>x.id===id);
+  document.getElementById('announce-modal').innerHTML = `
+    <button class="modal-close" onclick="closeAnnounceDetail()">✕</button>
+    <div class="modal-handle"></div>
+    ${a.image ? `<img src="${a.image}" style="width:100%;border-radius:16px;margin-bottom:16px;border:1px solid var(--line);" onerror="this.style.display='none'">` : ''}
+    <div class="a-top" style="margin-bottom:8px;"><span class="a-type ${a.type}">${a.label}</span><span class="a-date">${a.date}</span></div>
+    <h3 style="margin-bottom:10px;">${a.title}</h3>
+    <div class="desc" style="white-space:pre-wrap;">${a.desc}</div>
+  `;
+  document.getElementById('announce-overlay').classList.add('show');
+}
+function closeAnnounceDetail(){ document.getElementById('announce-overlay').classList.remove('show'); }
 
 /* =========================================================
    行事曆
@@ -1291,9 +1314,10 @@ async function deleteProduct(id){
 function renderAdminAnnouncements(){
   const table = document.getElementById('admin-announce-table');
   document.getElementById('announce-count-lbl').textContent = '共 '+announcements.length+' 則公告';
-  table.innerHTML = '<tr><th>類型</th><th>標題</th><th>日期標示</th><th>說明</th><th>操作</th></tr>' +
+  table.innerHTML = '<tr><th>圖片</th><th>類型</th><th>標題</th><th>日期標示</th><th>說明</th><th>操作</th></tr>' +
     announcements.map(a=>`
       <tr>
+        <td>${a.image ? `<img src="${a.image}" style="width:48px;height:36px;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'">` : '<span class="mono" style="color:var(--muted);font-size:11px;">無</span>'}</td>
         <td><span class="a-type ${a.type}" style="display:inline-block">${a.label}</span></td>
         <td>${a.title}</td><td class="mono">${a.date}</td>
         <td style="max-width:220px;">${a.desc}</td>
@@ -1311,6 +1335,7 @@ function openAnnouncementForm(id){
     <h3>${a?'編輯公告':'新增公告'}</h3>
     <div class="field"><label>類型</label><select id="af-type">${typeMap.map(([v,l])=>`<option value="${v}" ${a&&a.type===v?'selected':''}>${l}</option>`).join('')}</select></div>
     <div class="field"><label>標題</label><input id="af-title" value="${a?a.title:''}" placeholder="公告標題"></div>
+    <div class="field"><label>圖片網址(選填)</label><input id="af-image" value="${a?(a.image||''):''}" placeholder="貼上圖片連結,例如 https://..."></div>
     <div class="field"><label>日期標示文字</label><input id="af-date" value="${a?a.date:''}" placeholder="例如:09/20 截止"></div>
     <div class="field"><label>說明</label><textarea id="af-desc">${a?a.desc:''}</textarea></div>
     <button class="btn primary" onclick="saveAnnouncement(${a?a.id:'null'})">${a?'儲存變更':'新增公告'}</button>
@@ -1324,12 +1349,13 @@ async function saveAnnouncement(id){
   const labelMap = {'a-important':'重要提醒','a-event':'活動快訊','a-notice':'系務公告'};
   const date = document.getElementById('af-date').value.trim();
   const desc = document.getElementById('af-desc').value.trim();
+  const image = document.getElementById('af-image').value.trim();
   if(id){
     const a = announcements.find(x=>x.id===id);
-    Object.assign(a, {type, label:labelMap[type], date, desc, title});
+    Object.assign(a, {type, label:labelMap[type], date, desc, title, image});
   } else {
     const newId = Math.max(0,...announcements.map(x=>x.id), 0) + 1;
-    announcements.push({id:newId, type, label:labelMap[type], date, title, desc});
+    announcements.push({id:newId, type, label:labelMap[type], date, title, desc, image});
   }
   await sSet('announcements-list', announcements, true);
   closeAdminModal();
