@@ -946,7 +946,7 @@ function makeCard(p){
       <div class="pr-vendor">${p.vendor} · ${p.cat}</div>
     </div>
     <div class="pr-right">
-      ${p.tagLabel ? `<span class="tag ${p.tag}">${p.tagLabel}</span>` : `<span class="mono" style="font-size:11px;color:var(--muted)">庫存 ${p.stock}</span>`}
+      ${p.stock===-1 ? `<span class="tag hot">預購中</span>` : (p.tagLabel ? `<span class="tag ${p.tag}">${p.tagLabel}</span>` : `<span class="mono" style="font-size:11px;color:var(--muted)">庫存 ${p.stock}</span>`)}
       <span class="price">${p.price===0?'免費':'$'+p.price}</span>
       <span class="pr-fav ${isFav?'active':''}" onclick="event.stopPropagation();toggleFav(${p.id})">${isFav?'♥':'♡'}</span>
     </div>`;
@@ -981,14 +981,14 @@ function openProduct(id){
         <div class="modal-vendor">${p.vendor} · ${p.cat}</div>
         <div class="desc">${p.desc}</div>
         <div class="modal-row"><span>單價</span><span class="mono">${p.price===0?'免費':'$'+p.price}</span></div>
-        <div class="modal-row"><span>目前庫存</span><span class="mono">${p.stock}</span></div>
+        <div class="modal-row"><span>${p.stock===-1?'訂購方式':'目前庫存'}</span><span class="mono">${p.stock===-1?'預購,不限數量':p.stock}</span></div>
         ${p.fileUrl ? `<a href="${p.fileUrl}" target="_blank" rel="noopener" class="btn ghost" style="border:1.5px solid var(--ink);display:block;text-align:center;text-decoration:none;margin-top:10px;">📎 查看附件/書單</a>` : ''}
-        ${p.stock>0 ? `
+        ${(p.stock>0 || p.stock===-1) ? `
         <div class="qty-row">
           <span style="font-size:13px">購買數量</span>
           <div class="qty-ctrl"><button onclick="changeQty(-1)">−</button><span id="qty-val">1</span><button onclick="changeQty(1)">+</button></div>
         </div>
-        <button class="btn primary" onclick="confirmOrder(${p.id})">確認訂購</button>
+        <button class="btn primary" onclick="confirmOrder(${p.id})">${p.stock===-1?'確認預購':'確認訂購'}</button>
         ` : `<button class="btn ghost" disabled style="margin-top:16px;opacity:.5">已完售</button>`}
       </div>
     </div>`;
@@ -1256,7 +1256,7 @@ function renderAdminDashboard(){
   document.getElementById('stat-pending').textContent = pendingAccounts.length;
   document.getElementById('stat-orders').textContent = orders.length;
   document.getElementById('stat-msgs').textContent = Object.keys(chatThreads).length;
-  document.getElementById('stat-products').textContent = products.filter(p=>p.stock>0).length;
+  document.getElementById('stat-products').textContent = products.filter(p=>p.stock>0 || p.stock===-1).length;
   const counts = {};
   orders.forEach(o=>{ counts[o.title] = (counts[o.title]||0)+1; });
   const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
@@ -1276,8 +1276,8 @@ function renderAdminProducts(){
       <tr>
         <td>${p.title}</td><td>${p.cat}</td><td>${p.vendor}</td>
         <td class="mono">${p.price===0?'免費':'$'+p.price}</td>
-        <td class="mono">${p.stock}</td>
-        <td>${p.stock===0 ? '<span class="pill done">已完售</span>' : '<span class="pill paid">上架中</span>'}</td>
+        <td class="mono">${p.stock===-1?'不限(預購)':p.stock}</td>
+        <td>${p.stock===0 ? '<span class="pill done">已完售</span>' : (p.stock===-1 ? '<span class="pill paid">預購中</span>' : '<span class="pill paid">上架中</span>')}</td>
         <td style="white-space:nowrap;">
           <button class="btn-sm outline" onclick="openProductForm(${p.id})">編輯</button>
           <button class="btn-sm outline danger-text" onclick="deleteProduct(${p.id})">刪除</button>
@@ -1297,7 +1297,13 @@ function openProductForm(id){
     <div class="field"><label>廠商名稱</label><input id="pf-vendor" value="${p?p.vendor:''}" placeholder="廠商/店家名稱"></div>
     <div class="field-row">
       <div class="field"><label>單價</label><input id="pf-price" type="number" value="${p?p.price:0}"></div>
-      <div class="field"><label>庫存</label><input id="pf-stock" type="number" value="${p?p.stock:10}"></div>
+      <div class="field"><label>庫存</label><input id="pf-stock" type="number" value="${p&&p.stock!==-1?p.stock:10}" ${p&&p.stock===-1?'disabled':''}></div>
+    </div>
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit;color:var(--ink);">
+        <input type="checkbox" id="pf-preorder" style="width:16px;height:16px;" ${p&&p.stock===-1?'checked':''} onchange="document.getElementById('pf-stock').disabled=this.checked">
+        此商品為預購(不限數量,不用填庫存)
+      </label>
     </div>
     <div class="field"><label>說明</label><textarea id="pf-desc">${p?p.desc:''}</textarea></div>
     <div class="field"><label>附件連結(選填,如書單/型錄PDF)</label><input id="pf-file" value="${p?(p.fileUrl||''):''}" placeholder="貼上檔案連結(如Google Drive公開連結)"></div>
@@ -1312,7 +1318,8 @@ async function saveProduct(id){
   const image = document.getElementById('pf-image').value.trim();
   const vendor = document.getElementById('pf-vendor').value.trim();
   const price = Number(document.getElementById('pf-price').value) || 0;
-  const stock = Number(document.getElementById('pf-stock').value) || 0;
+  const isPreorder = document.getElementById('pf-preorder').checked;
+  const stock = isPreorder ? -1 : (Number(document.getElementById('pf-stock').value) || 0);
   const desc = document.getElementById('pf-desc').value.trim();
   const fileUrl = document.getElementById('pf-file').value.trim();
   if(id){
