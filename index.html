@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>淡江建築系採購站</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#F6F2E9;
+  --surface:#FFFFFF;
+  --ink:#15171C;
+  --muted:#6E6A5E;
+  --line:#E6E0D0;
+  --p1:#C1272D;
+  --p2:#FF7A45;
+  --grad: linear-gradient(120deg, var(--p1), var(--p2));
+  --violet:#7C5CFC;
+  --violet-tint:#EEE9FF;
+  --blue:#2F80ED;
+  --blue-tint:#E6F0FE;
+  --green:#1F9E77;
+  --green-tint:#DEF5EC;
+  --orange:#FF9F40;
+  --orange-tint:#FFEEDA;
+  --pink:#FF5FA2;
+  --pink-tint:#FFE3F0;
+  --warn:#B8862F;
+  --warn-tint:#FBEED4;
+  --shadow: 0 12px 28px rgba(21,23,28,.14);
+  --shadow-sm: 0 4px 14px rgba(21,23,28,.08);
+  --r-lg:18px;
+  --r-md:12px;
+  --r-full:999px;
+}
+[data-theme="dark"]{
+  --bg:#15171C;
+  --surface:#1E2027;
+  --ink:#F3F1EA;
+  --muted:#9B978A;
+  --line:#31333B;
+  --violet-tint:#2A2450;
+  --blue-tint:#1B3252;
+  --green-tint:#173B31;
+  --orange-tint:#3A2A14;
+  --pink-tint:#3A1E2C;
+  --warn-tint:#3A2E13;
+  --shadow: 0 12px 28px rgba(0,0,0,.4);
+  --shadow-sm: 0 4px 14px rgba(0,0,0,.3);
+}
+body{transition:background-color .3s ease, color .3s ease;}
+.view{animation:viewFade .28s ease;}
+@keyframes viewFade{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+.theme-toggle{cursor:pointer;font-size:15px;}
+.empty-state{text-align:center;padding:34px 16px;color:var(--muted);}
+.empty-state .es-icon{font-size:30px;margin-bottom:8px;opacity:.7;}
+.empty-state .es-text{font-size:12.5px;font-family:'IBM Plex Mono';}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'IBM Plex Sans', sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Space Grotesk', sans-serif;margin:0;letter-spacing:-0.01em;}
+.mono{font-family:'IBM Plex Mono', monospace;}
+button{font-family:inherit;cursor:pointer;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#C7BC9E;border-radius:8px;}
+
+/* ================= SPLASH ================= */
+#splash{
+  position:fixed;inset:0;z-index:999;background:var(--grad);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  transition:opacity .5s ease, visibility .5s;
+}
+#splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.splash-mark{position:relative;width:88px;height:88px;animation:markPop .7s cubic-bezier(.2,1.4,.4,1) both;}
+.splash-mark .sq{position:absolute;inset:0;border:4px solid #fff;border-radius:20px;transform:rotate(45deg);animation:markSpin 1.4s ease-in-out infinite alternate;}
+.splash-mark .dot{position:absolute;top:50%;left:50%;width:16px;height:16px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);}
+@keyframes markPop{ from{opacity:0;transform:scale(.4) rotate(-25deg);} to{opacity:1;transform:scale(1) rotate(0);} }
+@keyframes markSpin{ from{transform:rotate(40deg);} to{transform:rotate(50deg);} }
+.splash-word{color:#fff;font-family:'Space Grotesk';font-size:22px;font-weight:700;letter-spacing:.02em;opacity:0;animation:fadeUp .6s ease .35s both;text-align:center;}
+.splash-word small{display:block;font-family:'IBM Plex Mono';font-size:11px;font-weight:400;letter-spacing:.15em;margin-top:6px;opacity:.85;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.splash-bar{width:150px;height:5px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden;opacity:0;animation:fadeUp .5s ease .55s both;}
+.splash-bar i{display:block;height:100%;width:0%;background:#fff;border-radius:99px;animation:barFill 1.6s ease .6s forwards;}
+@keyframes barFill{ to{width:100%;} }
+
+/* ---------- page frame ---------- */
+#app{width:100%;}
+.frame{width:100%;max-width:1400px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
+.platform{display:none;}
+.platform.active{display:block;}
+
+/* ===================== STUDENT ===================== */
+#student-app .topbar{
+  background:var(--ink);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:18px;position:sticky;top:0;z-index:30;
+}
+#student-app .logo{font-weight:700;font-size:17px;white-space:nowrap;display:flex;align-items:center;gap:8px;}
+.logo-mark{width:22px;height:22px;border:2px solid var(--p2);border-radius:6px;transform:rotate(45deg);flex-shrink:0;}
+#student-app .logo span{color:var(--p2);}
+.searchbar{
+  flex:1;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);padding:8px 14px;border-radius:var(--r-full);
+  color:#fff;font-size:13px;display:flex;align-items:center;gap:8px;
+}
+.searchbar input{background:transparent;border:none;color:#fff;outline:none;font-size:13px;width:100%;font-family:inherit;}
+.searchbar input::placeholder{color:rgba(255,255,255,.6);}
+.topbar-icons{display:flex;gap:14px;align-items:center;font-size:16px;}
+.avatar{width:32px;height:32px;background:var(--grad);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;}
+.mobile-search-btn{display:none;}
+.app.mobile .mobile-search-btn{display:inline;}
+.mobile-searchbar{display:none;padding:0 16px 10px;background:var(--ink);}
+.mobile-searchbar.show{display:block;}
+.app.desktop .mobile-searchbar{display:none !important;}
+.app.mobile .searchbar{display:none;}
+.app.mobile .mobile-searchbar .searchbar{display:flex;}
+
+.body-layout{display:flex;align-items:flex-start;}
+.sidebar{width:196px;flex-shrink:0;padding:20px 14px;position:sticky;top:64px;}
+.app.mobile .sidebar{display:none;}
+.sidebar h4{font-size:11px;letter-spacing:.05em;color:var(--muted);margin-bottom:10px;font-family:'IBM Plex Mono';}
+.cat-item{display:flex;align-items:center;gap:8px;padding:9px 10px;font-size:13.5px;cursor:pointer;margin-bottom:4px;border-radius:var(--r-md);}
+.cat-item .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.cat-item:hover{background:rgba(0,0,0,.04);}
+.cat-item.active{background:var(--ink);color:#fff;font-weight:600;}
+.cat-item .n{margin-left:auto;color:var(--muted);font-family:'IBM Plex Mono';font-size:11px;}
+.cat-item.active .n{color:rgba(255,255,255,.7);}
+
+.main{flex:1;padding:20px 22px;min-width:0;}
+
+.desktop-nav{display:none;gap:6px;}
+.app.desktop .desktop-nav{display:flex;}
+.d-nav-item{padding:7px 14px;font-size:13px;font-weight:600;color:rgba(255,255,255,.75);border-radius:var(--r-full);white-space:nowrap;cursor:pointer;}
+.d-nav-item.active{background:rgba(255,255,255,.16);color:#fff;}
+
+.chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;}
+.chip{white-space:nowrap;padding:7px 15px;border:1.5px solid var(--ink);border-radius:var(--r-full);font-size:12.5px;font-weight:600;background:var(--surface);cursor:pointer;transition:transform .12s;}
+.chip:hover{transform:translateY(-1px);}
+.chip.active{background:var(--ink);color:#fff;}
+
+.section-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px;flex-wrap:wrap;}
+.section-label h2{font-size:20px;}
+.section-label .count{font-family:'IBM Plex Mono';font-size:12px;color:var(--muted);}
+
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.app.desktop .product-grid{grid-template-columns:repeat(4,1fr);}
+.app.mobile .product-grid{grid-template-columns:1fr 1fr;gap:10px;}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s, box-shadow .15s;overflow:hidden;}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(21,23,28,.16);}
+.card:active{transform:scale(.98);}
+.card-thumb{height:100px;display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;border-bottom:1px solid var(--line);}
+.card-thumb .fav{position:absolute;top:7px;right:7px;width:26px;height:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid var(--ink);}
+.card-thumb .fav.active{color:var(--p1);}
+.card-body{padding:11px 12px 13px;}
+.card-cat{display:inline-block;font-family:'IBM Plex Mono';font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-full);margin-bottom:6px;}
+.card-title{font-size:13.5px;font-weight:700;line-height:1.35;margin-bottom:6px;min-height:36px;}
+.card-vendor{font-size:11.5px;color:var(--muted);margin-bottom:9px;}
+.card-foot{display:flex;justify-content:space-between;align-items:center;}
+.price{font-family:'IBM Plex Mono';font-weight:600;font-size:14.5px;}
+.tag{font-size:10px;padding:3px 8px;border-radius:var(--r-full);font-weight:700;}
+.tag.hot{background:var(--p1);color:#fff;}
+.tag.closing{background:var(--warn);color:#fff;}
+.tag.soldout{background:#D8D2BE;color:#6b6656;}
+
+.c-ad{background:var(--violet-tint);color:var(--violet);}
+.c-book{background:var(--blue-tint);color:var(--blue);}
+.c-tool{background:var(--green-tint);color:var(--green);}
+.c-mat{background:var(--orange-tint);color:#B36B00;}
+.c-course{background:var(--pink-tint);color:#C81C6E;}
+.dot-ad{background:var(--violet);} .dot-book{background:var(--blue);} .dot-tool{background:var(--green);} .dot-mat{background:var(--orange);} .dot-course{background:var(--pink);}
+.thumb-ad{background:var(--violet-tint);} .thumb-book{background:var(--blue-tint);} .thumb-tool{background:var(--green-tint);} .thumb-mat{background:var(--orange-tint);} .thumb-course{background:var(--pink-tint);}
+
+/* announcements */
+.announce-row{display:flex;gap:12px;overflow-x:auto;margin-bottom:22px;padding-bottom:2px;}
+.app.desktop .announce-row{display:grid;grid-template-columns:repeat(3,1fr);overflow-x:visible;}
+.app.desktop .announce-card{flex:unset;}
+.announce-card{flex:0 0 250px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow-sm);border-left-width:4px;}
+.app.mobile .announce-card{flex:0 0 220px;}
+.announce-card .a-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.announce-card .a-type{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:var(--r-full);}
+.announce-card .a-date{font-size:10.5px;color:var(--muted);font-family:'IBM Plex Mono';}
+.announce-card h4{font-size:13.5px;line-height:1.4;margin-bottom:5px;}
+.announce-card p{font-size:11.5px;color:var(--muted);line-height:1.6;margin:0;}
+.a-important{border-left-color:var(--p1);} .a-important .a-type{background:var(--pink-tint);color:var(--p1);}
+.a-event{border-left-color:var(--violet);} .a-event .a-type{background:var(--violet-tint);color:var(--violet);}
+.a-notice{border-left-color:var(--blue);} .a-notice .a-type{background:var(--blue-tint);color:var(--blue);}
+
+/* modal (product) */
+.overlay{position:fixed;inset:0;background:rgba(20,22,26,.55);display:none;align-items:flex-end;justify-content:center;z-index:180;}
+.overlay.show{display:flex;}
+.app.desktop .overlay{align-items:center;}
+.modal{background:var(--surface);width:100%;max-width:420px;padding:22px;border-radius:24px 24px 0 0;border:1px solid var(--line);border-bottom:none;max-height:88vh;overflow-y:auto;animation:slideUp .3s ease;position:relative;}
+.app.desktop .modal{border-radius:22px;border-bottom:1px solid var(--line);box-shadow:var(--shadow);max-width:580px;}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-handle{display:none;}
+.app.mobile .modal-handle{display:block;width:42px;height:5px;background:var(--line);border-radius:99px;margin:-6px auto 14px;}
+.modal-layout{display:flex;flex-direction:column;}
+.app.desktop .modal-layout{flex-direction:row;gap:22px;align-items:flex-start;}
+.modal-media{width:100%;}
+.app.desktop .modal-media{width:220px;flex-shrink:0;}
+.modal-info{flex:1;min-width:0;}
+.modal-thumb{width:100%;height:150px;border-radius:16px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:42px;margin-bottom:14px;border:1px solid var(--line);}
+.app.desktop .modal-media .modal-thumb{height:220px;margin-bottom:0;}
+.modal h3{font-size:18px;margin-bottom:4px;}
+.modal .modal-vendor{font-size:12.5px;color:var(--muted);margin-bottom:12px;}
+.modal .desc{font-size:13px;line-height:1.7;color:#3a3a3a;margin-bottom:16px;}
+.modal-row{display:flex;justify-content:space-between;font-size:13px;padding:9px 0;border-top:1px solid var(--line);}
+.qty-row{display:flex;align-items:center;justify-content:space-between;margin:14px 0;}
+.qty-ctrl{display:flex;align-items:center;border:1.5px solid var(--ink);border-radius:var(--r-full);overflow:hidden;}
+.qty-ctrl button{width:32px;height:32px;background:var(--bg);border:none;font-size:15px;}
+.qty-ctrl span{width:34px;text-align:center;font-family:'IBM Plex Mono';}
+.btn{padding:12px 18px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;font-size:13.5px;font-weight:700;width:100%;text-align:center;border-radius:var(--r-full);box-shadow:var(--shadow-sm);transition:transform .12s;}
+.btn:active{transform:scale(.98);}
+.btn.primary{background:var(--grad);border-color:var(--ink);color:#fff;}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;}
+.modal-close{position:absolute;top:14px;right:14px;z-index:5;font-size:18px;background:#fff;border:1.5px solid var(--ink);width:30px;height:30px;border-radius:50%;line-height:1;}
+
+/* lists */
+.order-item, .fav-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:var(--shadow-sm);}
+.app.desktop .list-view{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+.app.desktop .list-view .order-item, .app.desktop .list-view .wish-card{margin-bottom:0;}
+.order-item .oi-title{font-size:13.5px;font-weight:700;margin-bottom:4px;}
+.order-item .oi-meta{font-size:11.5px;color:var(--muted);font-family:'IBM Plex Mono';}
+.status-pair{display:flex;gap:6px;}
+.pill{font-size:10.5px;padding:4px 10px;border-radius:var(--r-full);font-weight:700;white-space:nowrap;}
+.pill.paid{background:var(--green-tint);color:var(--green);}
+.pill.unpaid{background:var(--warn-tint);color:var(--warn);}
+.pill.done{background:#EDEAE2;color:var(--muted);}
+
+/* ================= LOGIN SCREEN ================= */
+#login-screen{position:fixed;inset:0;z-index:150;display:flex;background:var(--bg);}
+#login-screen.hidden{display:none;}
+.login-hero{flex:1;background:var(--grad);display:flex;flex-direction:column;justify-content:center;padding:50px;color:#fff;position:relative;overflow:hidden;}
+.login-hero .hero-mark{width:60px;height:60px;border:3px solid #fff;border-radius:16px;transform:rotate(45deg);margin-bottom:28px;}
+.login-hero h1{font-size:30px;line-height:1.3;max-width:320px;}
+.login-hero p{font-size:13.5px;opacity:.9;margin-top:14px;max-width:280px;line-height:1.7;}
+.login-hero .deco{position:absolute;bottom:-60px;right:-60px;width:240px;height:240px;background:rgba(255,255,255,.18);border-radius:50%;filter:blur(6px);}
+.login-hero .deco2{position:absolute;top:20px;right:40px;width:140px;height:140px;background:rgba(255,255,255,.12);border-radius:50%;filter:blur(4px);}
+.app.mobile .login-hero{display:none;}
+.login-panel{width:420px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:30px;overflow-y:auto;}
+.app.mobile .login-panel{width:100%;}
+.login-card{width:100%;max-width:340px;}
+.login-card h2{font-size:22px;margin-bottom:4px;}
+.login-card p.sub{font-size:12.5px;color:var(--muted);margin-bottom:20px;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:5px;font-family:'IBM Plex Mono';font-weight:500;}
+.field input, .field select{width:100%;padding:11px 13px;border:1.5px solid var(--ink);border-radius:var(--r-md);font-size:13.5px;font-family:inherit;background:var(--surface);outline:none;}
+.field input:focus, .field select:focus{border-color:var(--p1);box-shadow:0 0 0 3px var(--pink-tint);}
+.auth-toggle{text-align:center;font-size:12.5px;margin-top:16px;color:var(--muted);}
+.auth-toggle a{color:var(--p1);cursor:pointer;font-weight:600;text-decoration:none;}
+.pending-banner{background:var(--warn-tint);border:1.5px solid var(--warn);border-radius:var(--r-md);padding:11px 13px;font-size:12.5px;margin-bottom:16px;}
+.admin-entry{position:fixed;left:14px;bottom:10px;font-size:11px;color:var(--muted);opacity:.55;cursor:pointer;z-index:160;font-family:'IBM Plex Mono';}
+.admin-entry:hover{opacity:1;}
+
+/* bottom nav (mobile only) */
+.bottom-nav{display:none;position:sticky;bottom:0;background:var(--surface);border-top:1.5px solid var(--ink);justify-content:space-around;padding:9px 0 12px;z-index:40;}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--muted);font-weight:600;cursor:pointer;}
+.bn-item.active{color:var(--p1);}
+.bn-item .ic{font-size:18px;}
+.app.mobile .bottom-nav{display:flex;}
+.app.mobile #student-app .topbar{padding:12px 16px;}
+
+/* chat */
+.chat-fab{position:fixed;bottom:24px;right:24px;width:54px;height:54px;background:var(--grad);border:1.5px solid var(--ink);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;z-index:60;box-shadow:var(--shadow-sm);}
+.app.mobile .chat-fab{bottom:84px;right:16px;}
+.chat-panel{position:fixed;bottom:88px;right:24px;width:305px;height:410px;background:var(--surface);border:1px solid var(--line);border-radius:20px;display:none;flex-direction:column;z-index:170;box-shadow:var(--shadow);overflow:hidden;}
+.chat-panel.show{display:flex;animation:slideUp .25s ease;}
+.app.mobile .chat-panel{right:10px;left:10px;width:auto;bottom:142px;}
+.chat-head{background:var(--ink);color:#fff;padding:12px 14px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;}
+.chat-body{flex:1;padding:12px 14px;overflow-y:auto;font-size:12.5px;display:flex;flex-direction:column;gap:8px;}
+.msg{max-width:80%;padding:8px 12px;line-height:1.5;border-radius:14px;}
+.msg.them{background:var(--bg);align-self:flex-start;border:1px solid var(--line);}
+.msg.me{background:var(--pink-tint);align-self:flex-end;border:1px solid var(--pink);}
+.faq-row{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px;}
+.faq-btn{font-size:10.5px;border:1.5px solid var(--ink);border-radius:var(--r-full);background:var(--surface);padding:5px 10px;font-weight:600;}
+.chat-input{display:flex;border-top:1.5px solid var(--line);}
+.chat-input input{flex:1;border:none;padding:10px 12px;font-size:12.5px;font-family:inherit;background:var(--surface);outline:none;}
+.chat-input button{border:none;background:var(--ink);color:#fff;padding:0 16px;font-size:12px;font-weight:700;}
+
+/* calendar */
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono';margin-bottom:6px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;}
+.cal-cell{aspect-ratio:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:12px;transition:border-color .12s;}
+.cal-cell.empty{background:transparent;border:none;cursor:default;}
+.cal-cell:not(.empty):hover{border-color:var(--ink);}
+.cal-cell.today{border:1.5px solid var(--p1);font-weight:700;}
+.cal-cell.selected{background:var(--ink);color:#fff;border-color:var(--ink);}
+.cal-dots{display:flex;gap:2px;min-height:5px;}
+.cal-dot{width:5px;height:5px;border-radius:50%;}
+.cal-event-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:12.5px;box-shadow:var(--shadow-sm);}
+.cal-event-item .ce-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.cal-empty-msg{font-size:12.5px;color:var(--muted);font-family:'IBM Plex Mono';}
+
+/* wish wall */
+.wish-form{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;margin-bottom:18px;box-shadow:var(--shadow-sm);display:none;}
+.wish-form.show{display:block;}
+.wish-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow-sm);display:flex;justify-content:space-between;gap:14px;align-items:flex-start;}
+.wish-card .wc-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.wish-card .wc-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:8px;}
+.wish-card .wc-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.vote-btn{display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid var(--ink);border-radius:var(--r-md);padding:8px 12px;background:var(--bg);font-weight:700;flex-shrink:0;min-width:56px;cursor:pointer;transition:transform .12s;}
+.vote-btn:hover{transform:translateY(-2px);}
+.vote-btn.voted{background:var(--grad);color:#fff;border-color:var(--ink);}
+.vote-btn .vn{font-family:'IBM Plex Mono';font-size:15px;}
+.wish-status{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:var(--r-full);}
+.ws-pending{background:#EDEAE2;color:var(--muted);}
+.ws-contact{background:var(--orange-tint);color:#B36B00;}
+.ws-live{background:var(--green-tint);color:var(--green);}
+
+/* ===================== ADMIN ===================== */
+.admin-layout{display:flex;min-height:100vh;}
+.app.mobile .admin-layout{flex-direction:column;min-height:auto;}
+.admin-sidebar{width:206px;background:var(--ink);color:#fff;flex-shrink:0;padding:20px 0;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;}
+.app.mobile .admin-sidebar{width:100%;display:flex;overflow-x:auto;padding:10px;height:auto;position:sticky;top:0;z-index:30;}
+.admin-logo{padding:0 18px 16px;font-weight:700;font-size:15px;border-bottom:1px solid rgba(255,255,255,.15);margin-bottom:10px;line-height:1.4;}
+.app.mobile .admin-logo{display:none;}
+.a-nav-item{padding:11px 18px;font-size:13.5px;cursor:pointer;color:rgba(255,255,255,.7);white-space:nowrap;font-weight:600;border-radius:0 var(--r-full) var(--r-full) 0;margin-right:14px;}
+.a-nav-item.active{background:var(--p2);color:#fff;}
+.app.mobile .a-nav-item{border-radius:var(--r-full);margin:0 4px;padding:8px 14px;}
+
+.admin-main{flex:1;background:var(--bg);min-width:0;}
+.admin-topbar{padding:16px 24px;border-bottom:2px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.admin-topbar h2{font-size:18px;}
+.admin-content{padding:20px 24px;}
+.app.mobile .admin-content{padding:14px;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.app.mobile .stat-grid{grid-template-columns:1fr 1fr;}
+.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:15px 17px;box-shadow:var(--shadow-sm);transition:transform .15s, box-shadow .15s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(21,23,28,.14);}
+.app.mobile .stat-card{padding:12px 13px;}
+.stat-card .num{font-family:'IBM Plex Mono';font-size:27px;font-weight:600;}
+.app.mobile .stat-card .num{font-size:22px;}
+.stat-card .lbl{font-size:11.5px;color:var(--muted);margin-top:4px;}
+
+table{width:100%;border-collapse:collapse;background:var(--surface);font-size:13px;}
+th,td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--line);}
+th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;background:#F1ECDF;}
+.table-wrap{border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;overflow-x:auto;box-shadow:var(--shadow-sm);}
+.app.mobile table{font-size:12px;}
+.app.mobile th, .app.mobile td{padding:8px 9px;}
+
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+.btn-sm{padding:8px 14px;font-size:12.5px;font-weight:700;border:1.5px solid var(--ink);background:var(--ink);color:#fff;border-radius:var(--r-full);transition:transform .12s, opacity .12s;}
+.btn-sm:hover{opacity:.85;}
+.btn-sm:active{transform:scale(.96);}
+.btn-sm.outline{background:transparent;color:var(--ink);}
+.btn-sm.accent{background:var(--grad);border-color:var(--ink);}
+.danger-text{color:var(--p1);}
+
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;}
+.tab{padding:8px 16px;font-size:12.5px;font-weight:600;border:1.5px solid var(--ink);background:var(--surface);white-space:nowrap;border-radius:var(--r-full);cursor:pointer;}
+.tab.active{background:var(--ink);color:#fff;}
+
+.status-btn{font-size:11px;padding:4px 10px;border-radius:var(--r-full);border:2px solid;cursor:pointer;background:none;font-weight:700;}
+.approve-row{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 15px;margin-bottom:10px;box-shadow:var(--shadow-sm);flex-wrap:wrap;gap:10px;}
+.msg-list-row{display:flex;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--line);background:var(--surface);font-size:13px;cursor:pointer;gap:10px;}
+.msg-list-row:hover{background:#FBF9F3;}
+.unread-dot{width:8px;height:8px;background:var(--p1);border-radius:50%;display:inline-block;margin-right:6px;}
+
+.hidden{display:none !important;}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-8px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:var(--r-full);font-size:13px;font-weight:600;z-index:400;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;display:flex;align-items:center;gap:8px;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:var(--p1);}
+
+/* admin form / passcode modal */
+.admin-modal-overlay{position:fixed;inset:0;background:rgba(20,22,26,.55);display:none;align-items:center;justify-content:center;z-index:300;padding:16px;}
+.admin-modal-overlay.show{display:flex;}
+.admin-modal{background:var(--surface);width:100%;max-width:440px;border-radius:var(--r-lg);border:1px solid var(--line);box-shadow:var(--shadow);padding:24px;max-height:85vh;overflow-y:auto;position:relative;animation:slideUp .25s ease;}
+.admin-modal h3{font-size:17px;margin-bottom:16px;}
+.admin-modal .field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--ink);border-radius:var(--r-md);font-size:13.5px;font-family:inherit;background:var(--surface);outline:none;resize:vertical;min-height:64px;}
+.field-row{display:flex;gap:10px;}
+.field-row .field{flex:1;}
+.thread-msgs{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:14px;padding:4px;}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-mark"><div class="sq"></div><div class="dot"></div></div>
+  <div class="splash-word">淡江建築採購站<small>TKU ARCHITECTURE MARKETPLACE</small></div>
+  <div class="splash-bar"><i></i></div>
+</div>
+
+<div id="app" class="app desktop">
+  <div class="frame">
+
+    <!-- ============ STUDENT PLATFORM ============ -->
+    <div id="student-app" class="platform active">
+
+      <!-- LOGIN / REGISTER / PENDING SCREEN -->
+      <div id="login-screen">
+        <div class="login-hero">
+          <div class="deco"></div><div class="deco2"></div>
+          <div class="hero-mark"></div>
+          <h1>系上採購,<br>一站搞定。</h1>
+          <p>廣告、書展、工具、材料、課程資訊,審核制帳號,買斷免奔波,登入後立即開始選購。</p>
+        </div>
+        <div class="login-panel">
+          <div class="login-card">
+            <div id="pending-banner" class="pending-banner" style="display:none;">您的資料已送出,正在等待系辦審核,審核通過後即可開始選購。</div>
+            <h2 id="auth-title">學生註冊</h2>
+            <p class="sub" id="auth-sub">第一次使用請留下資料,審核通過後即可下單</p>
+            <div id="auth-register">
+              <div class="field"><label>學號</label><input id="reg-sid" placeholder="B11xxxxxxx"></div>
+              <div class="field"><label>姓名</label><input id="reg-name" placeholder="王小明"></div>
+              <div class="field"><label>年級</label>
+                <select id="reg-grade"><option>大一</option><option>大二</option><option selected>大三</option><option>大四</option><option>研究所</option></select>
+              </div>
+              <div class="field"><label>聯絡方式(手機或Line ID)</label><input id="reg-contact" placeholder="09xx-xxx-xxx"></div>
+              <button class="btn primary" onclick="doRegister()">送出資料(等待審核)</button>
+            </div>
+            <div id="auth-pending" style="display:none;">
+              <button class="btn" onclick="recheckAccess()">重新檢查審核狀態</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <header class="topbar">
+        <div class="logo"><div class="logo-mark"></div>淡江建築<span>採購站</span></div>
+        <div class="desktop-nav">
+          <div class="d-nav-item active" data-nav="home">首頁</div>
+          <div class="d-nav-item" data-nav="calendar">行事曆</div>
+          <div class="d-nav-item" data-nav="wishes">許願牆</div>
+          <div class="d-nav-item" data-nav="favorites">收藏</div>
+          <div class="d-nav-item" data-nav="orders">我的訂單</div>
+          <div class="d-nav-item" data-nav="auth">我的</div>
+        </div>
+        <div class="searchbar">🔍<input id="search-input-desktop" oninput="handleSearch(this.value)" placeholder="搜尋商品、廠商..."></div>
+        <div class="topbar-icons">
+          <span class="mobile-search-btn" onclick="toggleMobileSearch()">🔍</span>
+          <span class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">🌙</span>
+          <span style="cursor:pointer" onclick="switchView('calendar')">📅</span>
+          <div class="avatar" id="topbar-avatar">學</div>
+        </div>
+      </header>
+      <div class="mobile-searchbar" id="mobile-searchbar">
+        <div class="searchbar" style="display:flex">🔍<input id="search-input-mobile" oninput="handleSearch(this.value)" placeholder="搜尋商品、廠商..."></div>
+      </div>
+
+      <div class="body-layout">
+        <aside class="sidebar">
+          <h4>分類 CATEGORY</h4>
+          <div class="cat-item active" data-cat="all"><span class="dot" style="background:var(--ink)"></span><span>全部</span><span class="n" id="cat-count-all">0</span></div>
+          <div class="cat-item" data-cat="廣告"><span class="dot dot-ad"></span><span>廣告</span><span class="n" id="cat-count-廣告">0</span></div>
+          <div class="cat-item" data-cat="書展"><span class="dot dot-book"></span><span>書展</span><span class="n" id="cat-count-書展">0</span></div>
+          <div class="cat-item" data-cat="工具"><span class="dot dot-tool"></span><span>工具</span><span class="n" id="cat-count-工具">0</span></div>
+          <div class="cat-item" data-cat="材料"><span class="dot dot-mat"></span><span>材料</span><span class="n" id="cat-count-材料">0</span></div>
+          <div class="cat-item" data-cat="課程"><span class="dot dot-course"></span><span>課程</span><span class="n" id="cat-count-課程">0</span></div>
+        </aside>
+
+        <main class="main">
+          <!-- HOME VIEW -->
+          <section id="view-home" class="view">
+            <div class="section-label">
+              <h2>置頂公告</h2>
+              <span class="count mono">📌 <span id="announce-count-txt">0</span> 則</span>
+            </div>
+            <div class="announce-row" id="announce-row"></div>
+            <div class="chips">
+              <div class="chip active" data-cat="all">全部</div>
+              <div class="chip" data-cat="廣告">廣告</div>
+              <div class="chip" data-cat="書展">書展</div>
+              <div class="chip" data-cat="工具">工具</div>
+              <div class="chip" data-cat="材料">材料</div>
+              <div class="chip" data-cat="課程">課程</div>
+            </div>
+            <div class="section-label">
+              <h2>本週上架</h2>
+              <span class="count mono" id="home-count">0 項</span>
+            </div>
+            <div class="product-grid" id="product-grid"></div>
+          </section>
+
+          <!-- CALENDAR VIEW -->
+          <section id="view-calendar" class="view" style="display:none">
+            <div class="section-label">
+              <h2>行事曆</h2>
+              <span class="count mono" id="cal-title">2026年 9月</span>
+            </div>
+            <div class="cal-nav">
+              <button class="btn-sm outline" onclick="changeCalMonth(-1)">‹ 上個月</button>
+              <button class="btn-sm outline" onclick="changeCalMonth(1)">下個月 ›</button>
+            </div>
+            <div class="cal-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <div class="section-label"><h2 style="font-size:15px" id="cal-list-title">當日活動與截止日</h2></div>
+            <div id="cal-event-list"></div>
+          </section>
+
+          <!-- WISHES VIEW -->
+          <section id="view-wishes" class="view" style="display:none">
+            <div class="section-label">
+              <h2>許願牆</h2>
+              <button class="btn-sm accent" onclick="toggleWishForm()">+ 我要許願</button>
+            </div>
+            <p class="mono" style="font-size:12px;color:var(--muted);margin-bottom:14px;">想要系上引進哪個廠商、工具或商品?提出來讓大家附議,系辦會依熱門程度優先接洽。</p>
+            <div class="wish-form" id="wish-form">
+              <div class="field"><label>想要的廠商 / 商品</label><input id="wish-title" placeholder="例如:某牌針筆代理商"></div>
+              <div class="field"><label>分類</label>
+                <select id="wish-cat"><option>廣告</option><option>書展</option><option>工具</option><option>材料</option><option>課程</option><option>其他</option></select>
+              </div>
+              <div class="field"><label>說明(選填)</label><input id="wish-desc" placeholder="簡單說明原因或需求"></div>
+              <button class="btn primary" onclick="submitWish()">送出許願</button>
+            </div>
+            <div id="wish-list" class="list-view"></div>
+          </section>
+
+          <!-- FAVORITES VIEW -->
+          <section id="view-favorites" class="view" style="display:none">
+            <div class="section-label"><h2>我的收藏</h2><span class="count mono" id="fav-count">0 項</span></div>
+            <div id="fav-grid" class="product-grid"></div>
+            <div id="fav-empty" class="empty-state" style="display:none;"><div class="es-icon">🤍</div><div class="es-text">尚未收藏任何商品,點卡片右上角的愛心即可收藏</div></div>
+          </section>
+
+          <!-- ORDERS VIEW -->
+          <section id="view-orders" class="view" style="display:none">
+            <div class="section-label"><h2>我的訂單</h2><span class="count mono" id="my-info"></span></div>
+            <div class="list-view" id="orders-list"></div>
+          </section>
+
+          <!-- PROFILE VIEW -->
+          <section id="view-auth" class="view" style="display:none">
+            <div class="section-label"><h2>我的帳號</h2></div>
+            <div class="order-item">
+              <div>
+                <div class="oi-title" id="profile-name">-</div>
+                <div class="oi-meta" id="profile-meta">-</div>
+              </div>
+              <button class="btn-sm outline" onclick="doLogout()">登出</button>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <nav class="bottom-nav">
+        <div class="bn-item active" data-nav="home"><span class="ic">🏠</span>首頁</div>
+        <div class="bn-item" data-nav="wishes"><span class="ic">💡</span>許願</div>
+        <div class="bn-item" data-nav="orders"><span class="ic">🧾</span>訂單</div>
+        <div class="bn-item" data-nav="auth"><span class="ic">👤</span>我的</div>
+      </nav>
+
+      <div class="chat-fab" onclick="toggleChat()">💬</div>
+      <div class="chat-panel" id="chat-panel">
+        <div class="chat-head"><span>諮詢系辦</span><span style="cursor:pointer" onclick="toggleChat()">✕</span></div>
+        <div class="chat-body" id="chat-body">
+          <div class="msg them">您好,請問有什麼可以幫忙的嗎?</div>
+        </div>
+        <div class="faq-row">
+          <div class="faq-btn" onclick="sendFaq('取貨地點在哪裡?')">取貨地點</div>
+          <div class="faq-btn" onclick="sendFaq('可以用什麼方式付款?')">付款方式</div>
+          <div class="faq-btn" onclick="sendFaq('大約多久會出貨?')">出貨時間</div>
+        </div>
+        <div class="chat-input">
+          <input id="chat-input" placeholder="輸入訊息...">
+          <button onclick="sendChat()">送出</button>
+        </div>
+      </div>
+
+      <div class="overlay" id="product-overlay">
+        <div class="modal" id="product-modal"></div>
+      </div>
+    </div>
+
+    <!-- ============ ADMIN PLATFORM ============ -->
+    <div id="admin-app" class="platform" style="display:none">
+      <div class="admin-layout">
+        <aside class="admin-sidebar">
+          <div class="admin-logo">淡江建築系<br>辦管理後台</div>
+          <div class="a-nav-item active" data-anav="dashboard">儀表板</div>
+          <div class="a-nav-item" data-anav="products">商品管理</div>
+          <div class="a-nav-item" data-anav="announcements">公告管理</div>
+          <div class="a-nav-item" data-anav="orders">訂單管理</div>
+          <div class="a-nav-item" data-anav="wishes">許願牆</div>
+          <div class="a-nav-item" data-anav="approvals">帳號審核</div>
+          <div class="a-nav-item" data-anav="messages">學生訊息</div>
+        </aside>
+        <div class="admin-main">
+          <header class="admin-topbar">
+            <h2 id="admin-title">儀表板</h2>
+            <button class="btn-sm outline" onclick="exitAdmin()">返回學生視角</button>
+          </header>
+          <div class="admin-content">
+
+            <div id="a-view-dashboard" class="a-view">
+              <div class="stat-grid">
+                <div class="stat-card"><div class="num" id="stat-pending">0</div><div class="lbl">待審核帳號</div></div>
+                <div class="stat-card"><div class="num" id="stat-orders">0</div><div class="lbl">總訂單數</div></div>
+                <div class="stat-card"><div class="num" id="stat-msgs">0</div><div class="lbl">學生訊息串</div></div>
+                <div class="stat-card"><div class="num" id="stat-products">0</div><div class="lbl">上架中商品</div></div>
+              </div>
+              <div class="section-label"><h2 style="font-size:15px">熱門商品排行</h2></div>
+              <div class="table-wrap"><table id="admin-top-products"><tr><th>商品</th><th>分類</th><th>已被訂購次數</th></tr></table></div>
+            </div>
+
+            <div id="a-view-products" class="a-view" style="display:none">
+              <div class="toolbar">
+                <span class="mono" style="font-size:12px;color:var(--muted)" id="product-count-lbl">共 0 項商品</span>
+                <button class="btn-sm accent" onclick="openProductForm()">+ 新增商品</button>
+              </div>
+              <div class="table-wrap"><table id="admin-product-table"><tr><th>商品</th><th>分類</th><th>廠商</th><th>單價</th><th>庫存</th><th>狀態</th><th>操作</th></tr></table></div>
+            </div>
+
+            <div id="a-view-announcements" class="a-view" style="display:none">
+              <div class="toolbar">
+                <span class="mono" style="font-size:12px;color:var(--muted)" id="announce-count-lbl">共 0 則公告</span>
+                <button class="btn-sm accent" onclick="openAnnouncementForm()">+ 新增公告</button>
+              </div>
+              <div class="table-wrap"><table id="admin-announce-table"><tr><th>類型</th><th>標題</th><th>日期標示</th><th>說明</th><th>操作</th></tr></table></div>
+            </div>
+
+            <div id="a-view-orders" class="a-view" style="display:none">
+              <div class="tabs" id="grade-tabs">
+                <div class="tab active" data-grade="all">全部</div>
+                <div class="tab" data-grade="大一">大一</div>
+                <div class="tab" data-grade="大二">大二</div>
+                <div class="tab" data-grade="大三">大三</div>
+                <div class="tab" data-grade="大四">大四</div>
+                <div class="tab" data-grade="研究所">研究所</div>
+              </div>
+              <div class="toolbar">
+                <span class="mono" style="font-size:12px;color:var(--muted)" id="order-count-lbl">共 0 筆訂單</span>
+                <button class="btn-sm outline" onclick="exportOrdersCsv()">匯出 CSV</button>
+              </div>
+              <div class="table-wrap"><table><thead><tr><th>訂單編號</th><th>學生</th><th>年級</th><th>商品</th><th>數量</th><th>金額</th><th>付款</th><th>取貨</th></tr></thead><tbody id="admin-orders-body"></tbody></table></div>
+            </div>
+
+            <div id="a-view-wishes" class="a-view" style="display:none">
+              <div class="toolbar"><span class="mono" style="font-size:12px;color:var(--muted)">依附議數排序</span></div>
+              <div class="table-wrap"><table><thead><tr><th>許願內容</th><th>分類</th><th>附議數</th><th>狀態</th><th>操作</th></tr></thead><tbody id="admin-wishes-body"></tbody></table></div>
+            </div>
+
+            <div id="a-view-approvals" class="a-view" style="display:none">
+              <div class="tabs">
+                <div class="tab active" data-approvaltab="pending" onclick="switchApprovalTab('pending', this)">待審核</div>
+                <div class="tab" data-approvaltab="roster" onclick="switchApprovalTab('roster', this)">已核准名單</div>
+              </div>
+              <div id="approval-tab-pending">
+                <div id="approvals-list"></div>
+              </div>
+              <div id="approval-tab-roster" style="display:none">
+                <p class="mono" style="font-size:11.5px;color:var(--muted);margin-bottom:12px;">此處資料為系辦端保存的副本,編輯不會覆蓋學生自己裝置上的個人資料;「撤銷資格」會讓該學號無法再下單/附議。</p>
+                <div class="table-wrap"><table><thead><tr><th>姓名</th><th>學號</th><th>年級</th><th>聯絡方式</th><th>操作</th></tr></thead><tbody id="roster-body"></tbody></table></div>
+              </div>
+            </div>
+
+            <div id="a-view-messages" class="a-view" style="display:none">
+              <div class="section-label"><h2 style="font-size:15px">學生訊息</h2></div>
+              <div class="table-wrap" id="admin-messages-list"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-modal-overlay" id="admin-modal-overlay">
+      <div class="admin-modal" id="admin-modal-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="admin-entry" onclick="promptAdminAccess()">系辦管理入口</div>
+<div class="toast" id="toast"></div>
+
+<!-- ====== Firebase 設定區:請將下面的設定值換成你自己 Firebase 專案的內容 ====== -->
+<!-- 到 https://console.firebase.google.com 建立專案 → 新增網頁應用程式 → 複製設定值貼在下面 -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCVkUWEiq5ZOIVwZsPANC3Edh-WvR0oahk",
+  authDomain: "tku-arch-store.firebaseapp.com",
+  projectId: "tku-arch-store",
+  storageBucket: "tku-arch-store.firebasestorage.app",
+  messagingSenderId: "994773051752",
+  appId: "1:994773051752:web:90806ef78895aec0928edd"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const fbAuth = firebase.auth();
+</script>
+<!-- ====== Firebase 設定區結束 ====== -->
+
+<script>
+/* =========================================================
+   儲存層 (Firebase Firestore 封裝,取代原本的 window.storage)
+========================================================= */
+let currentUid = null;
+function ensureAuth(){
+  return new Promise((resolve)=>{
+    fbAuth.onAuthStateChanged(user=>{
+      if(user){ currentUid = user.uid; resolve(); }
+      else { fbAuth.signInAnonymously().catch(e=>{ console.error('signInAnonymously failed', e); resolve(); }); }
+    }, err=>{ console.error('onAuthStateChanged error', err); resolve(); });
+  });
+}
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(()=>resolve('__timeout__'), ms))
+  ]);
+}
+function docRef(key, shared){
+  return shared
+    ? db.collection('shared').doc(key)
+    : db.collection('personal').doc(currentUid).collection('data').doc(key);
+}
+async function sGet(key, shared, fallback){
+  try{
+    const snap = await docRef(key, shared).get();
+    if(snap.exists && snap.data().value !== undefined) return snap.data().value;
+    return fallback;
+  }catch(e){ console.error('sGet error', key, e); return fallback; }
+}
+async function sSet(key, val, shared){
+  try{ await docRef(key, shared).set({ value: val }); return true; }
+  catch(e){ console.error('sSet error', key, e); toast('資料儲存失敗,請確認網路連線後再試一次', 'error'); return false; }
+}
+
+/* =========================================================
+   預設種子資料(僅在第一次啟動、雲端尚無資料時使用)
+========================================================= */
+const catClass = {'廣告':{c:'c-ad',t:'thumb-ad'}, '書展':{c:'c-book',t:'thumb-book'}, '工具':{c:'c-tool',t:'thumb-tool'}, '材料':{c:'c-mat',t:'thumb-mat'}, '課程':{c:'c-course',t:'thumb-course'}};
+const ADMIN_PASSCODE = 'tku2026'; // 系辦可自行更改此通關密語
+
+const defaultProducts = [
+  {id:1, cat:'材料', title:'建築模型材料組(1:100)', vendor:'誠美模型材料行', price:980, stock:0, tag:'soldout', tagLabel:'已完售', icon:'🏗️', desc:'含保麗龍板、壓克力棒、噴膠、模型樹等系上常用模型材料,適合各年級設計課使用。'},
+  {id:2, cat:'書展', title:'2026建築書展預購', vendor:'田園城市書店', price:1200, stock:18, tag:'closing', tagLabel:'即將截止', icon:'📚', desc:'年度建築書展預購,含國內外建築理論、作品集精選書單,系上團購享 85 折。'},
+  {id:3, cat:'工具', title:'針筆繪圖工具組', vendor:'大成文具批發', price:650, stock:5, tag:'hot', tagLabel:'熱門', icon:'✏️', desc:'0.1-0.8mm 針筆全套,含替換墨水管與攜帶收納盒,建築製圖課指定工具。'},
+  {id:4, cat:'廣告', title:'雷射切割服務優惠券', vendor:'城市模型工坊', price:300, stock:40, tag:'', tagLabel:'', icon:'🔧', desc:'憑券享雷射切割服務 9 折優惠,適用於畢業設計、期末模型製作。'},
+  {id:5, cat:'工具', title:'製圖桌墊訂製', vendor:'大成文具批發', price:1500, stock:8, tag:'', tagLabel:'', icon:'📐', desc:'A1 尺寸自癒合切割墊,雙面刻度設計,適合製圖桌長期使用。'},
+  {id:6, cat:'材料', title:'雷射切割板材包', vendor:'誠美模型材料行', price:850, stock:12, tag:'hot', tagLabel:'熱門', icon:'🪵', desc:'椴木板、灰紙板、壓克力板各兩片,尺寸符合系上雷切機規格。'},
+  {id:7, cat:'書展', title:'Rhino/Grasshopper 課程講義', vendor:'系學會', price:450, stock:25, tag:'', tagLabel:'', icon:'📖', desc:'參數化設計課程輔助講義,含實作範例檔案下載連結。'},
+  {id:8, cat:'廣告', title:'手繪透視技法工作坊', vendor:'系學會', price:0, stock:30, tag:'closing', tagLabel:'即將截止', icon:'🎨', desc:'免費報名,由學長姐帶領的手繪透視技法工作坊,名額有限。'},
+  {id:9, cat:'課程', title:'Rhino/Grasshopper 期末密集班', vendor:'系學會 × 業師合作', price:1800, stock:15, tag:'hot', tagLabel:'熱門', icon:'🧩', desc:'三堂密集課程,由業界建築師帶領,教授參數化設計於畢業設計的實際應用,含教材與範例檔。'},
+  {id:10, cat:'課程', title:'模型攝影與後製課程', vendor:'系學會', price:600, stock:20, tag:'', tagLabel:'', icon:'📷', desc:'教你如何用手機或單眼拍出質感模型照,搭配基礎修圖技巧,適合準備作品集的同學。'},
+];
+const defaultAnnouncements = [
+  {id:1, type:'a-important', label:'重要提醒', date:'09/20 截止', title:'2026建築書展預購倒數', desc:'書展預購將於本週日截止,超過時間將無法加入團購名單,請把握時間下單。'},
+  {id:2, type:'a-event', label:'活動快訊', date:'09/15 開放報名', title:'手繪透視技法工作坊', desc:'由學長姐帶領的免費工作坊,名額僅30人,額滿為止,欲報名請盡早下單登記。'},
+  {id:3, type:'a-notice', label:'系務公告', date:'09/17 維護', title:'雷切機暫停預約通知', desc:'系館雷射切割機將於下週三全天進行例行維護,當日暫停開放預約使用。'},
+];
+const defaultWishes = [
+  {id:1, title:'誠品建築設計選書專區合作', cat:'書展', desc:'希望能跟誠品談固定折扣,方便同學平常買參考書。', votes:23, status:'ws-contact', statusLabel:'系辦已聯繫中'},
+  {id:2, title:'3D列印代印服務', cat:'工具', desc:'畢業設計常需要3D列印模型,希望有配合廠商可代印。', votes:18, status:'ws-pending', statusLabel:'待評估'},
+  {id:3, title:'二手製圖工具交流', cat:'其他', desc:'學長姐畢業後的工具/材料可以在這裡讓學弟妹接手。', votes:11, status:'ws-pending', statusLabel:'待評估'},
+  {id:4, title:'雷切板材團購(更多尺寸)', cat:'材料', desc:'希望材料行能提供更大尺寸的椴木板團購選項。', votes:7, status:'ws-live', statusLabel:'已上架商品'},
+];
+const calEvents = {
+  '2026-09-12': [{title:'採購站新版上線', cat:'廣告'}],
+  '2026-09-15': [{title:'手繪透視工作坊報名截止', cat:'廣告'}],
+  '2026-09-17': [{title:'雷切機全天維護,暫停預約', cat:'工具'}],
+  '2026-09-20': [{title:'2026建築書展預購截止', cat:'書展'}],
+  '2026-09-22': [{title:'Rhino/Grasshopper密集班開課', cat:'課程'}],
+  '2026-09-25': [{title:'雷切板材包開始取貨', cat:'材料'}, {title:'模型攝影課程開課', cat:'課程'}],
+};
+const calDotMap = {'廣告':'ad','書展':'book','工具':'tool','材料':'mat','課程':'course'};
+
+/* =========================================================
+   應用程式狀態(啟動時從雲端載入)
+========================================================= */
+let products=[], announcements=[], wishes=[], orders=[], pendingAccounts=[], approvedSids=[], chatThreads={}, roster=[];
+let profile=null, favorites=new Set(), votedWishes=new Set();
+let isAdmin=false;
+let currentCat='all';
+let calMonthOffset=0, calSelected='2026-09-12';
+let currentGrade='all';
+let qty=1;
+
+async function loadAllData(){
+  const [p,a,w,o,pa,as,ct,rl] = await Promise.all([
+    sGet('products-list', true, null),
+    sGet('announcements-list', true, null),
+    sGet('wishes-list', true, null),
+    sGet('orders-list', true, []),
+    sGet('pending-accounts-list', true, []),
+    sGet('approved-sids-list', true, []),
+    sGet('chat-threads', true, {}),
+    sGet('roster-list', true, []),
+  ]);
+  products = p!==null ? p : (await seedIfEmpty('products-list', defaultProducts));
+  announcements = a!==null ? a : (await seedIfEmpty('announcements-list', defaultAnnouncements));
+  wishes = w!==null ? w : (await seedIfEmpty('wishes-list', defaultWishes));
+  orders = o; pendingAccounts = pa; approvedSids = as; chatThreads = ct; roster = rl;
+
+  const [prof, fav, vw] = await Promise.all([
+    sGet('profile', false, null),
+    sGet('favorites-list', false, []),
+    sGet('voted-wishes-list', false, []),
+  ]);
+  profile = prof;
+  favorites = new Set(fav);
+  votedWishes = new Set(vw);
+}
+async function seedIfEmpty(key, defVal){
+  await sSet(key, defVal, true);
+  return defVal;
+}
+
+/* =========================================================
+   登入 / 註冊 / 審核流程
+========================================================= */
+function getAccessState(){
+  if(!profile) return 'unregistered';
+  if(approvedSids.includes(profile.sid)) return 'approved';
+  return 'pending';
+}
+function routeInitialScreen(){
+  const state = getAccessState();
+  const loginScreen = document.getElementById('login-screen');
+  if(state==='approved'){
+    loginScreen.classList.add('hidden');
+    document.getElementById('topbar-avatar').textContent = profile.name.slice(0,1);
+    document.getElementById('profile-name').textContent = profile.name;
+    document.getElementById('profile-meta').textContent = profile.sid+' · '+profile.grade;
+    document.getElementById('my-info').textContent = '學號 '+profile.sid+' · '+profile.grade;
+    switchView('home');
+  } else if(state==='pending'){
+    loginScreen.classList.remove('hidden');
+    document.getElementById('pending-banner').style.display='block';
+    document.getElementById('auth-title').textContent='審核中';
+    document.getElementById('auth-sub').textContent='系辦審核通過後即可開始選購';
+    document.getElementById('auth-register').style.display='none';
+    document.getElementById('auth-pending').style.display='block';
+  } else {
+    loginScreen.classList.remove('hidden');
+    document.getElementById('pending-banner').style.display='none';
+    document.getElementById('auth-title').textContent='學生註冊';
+    document.getElementById('auth-sub').textContent='第一次使用請留下資料,審核通過後即可下單';
+    document.getElementById('auth-register').style.display='block';
+    document.getElementById('auth-pending').style.display='none';
+  }
+}
+async function doRegister(){
+  const sid = document.getElementById('reg-sid').value.trim();
+  const name = document.getElementById('reg-name').value.trim();
+  const grade = document.getElementById('reg-grade').value;
+  const contact = document.getElementById('reg-contact').value.trim();
+  if(!sid || !name){ toast('請填寫學號與姓名', 'error'); return; }
+  profile = {sid, name, grade, contact};
+  await sSet('profile', profile, false);
+  if(!pendingAccounts.find(p=>p.sid===sid) && !approvedSids.includes(sid)){
+    pendingAccounts.push({sid, name, grade, contact, ts:Date.now()});
+    await sSet('pending-accounts-list', pendingAccounts, true);
+  }
+  toast('資料已送出,請等待系辦審核');
+  routeInitialScreen();
+}
+async function recheckAccess(){
+  approvedSids = await sGet('approved-sids-list', true, []);
+  pendingAccounts = await sGet('pending-accounts-list', true, []);
+  if(getAccessState()==='approved'){ toast('審核已通過!'); }
+  else { toast('目前仍在審核中,請稍後再確認'); }
+  routeInitialScreen();
+}
+async function doLogout(){
+  profile = null;
+  await sSet('profile', null, false);
+  document.getElementById('login-screen').classList.remove('hidden');
+  routeInitialScreen();
+}
+
+/* =========================================================
+   商品 / 首頁
+========================================================= */
+let searchQuery = '';
+function handleSearch(val){
+  searchQuery = val.trim().toLowerCase();
+  const other = document.getElementById(document.activeElement && document.activeElement.id==='search-input-desktop' ? 'search-input-mobile' : 'search-input-desktop');
+  if(other) other.value = val;
+  switchView('home');
+  renderProducts(currentCat);
+}
+function renderProducts(filterCat){
+  const grid = document.getElementById('product-grid');
+  grid.innerHTML = '';
+  let list = products.filter(p => filterCat==='all' || p.cat===filterCat);
+  if(searchQuery){
+    list = list.filter(p => p.title.toLowerCase().includes(searchQuery) || p.vendor.toLowerCase().includes(searchQuery));
+  }
+  document.getElementById('home-count').textContent = list.length + ' 項';
+  if(!list.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="es-icon">🔍</div><div class="es-text">找不到符合「${searchQuery||'此分類'}」的商品</div></div>`;
+  } else {
+    list.forEach(p => grid.appendChild(makeCard(p)));
+  }
+  document.getElementById('cat-count-all').textContent = String(products.length).padStart(2,'0');
+  ['廣告','書展','工具','材料','課程'].forEach(c=>{
+    const el = document.getElementById('cat-count-'+c);
+    if(el) el.textContent = String(products.filter(p=>p.cat===c).length).padStart(2,'0');
+  });
+}
+function makeCard(p){
+  const div = document.createElement('div');
+  div.className = 'card';
+  const isFav = favorites.has(p.id);
+  const cc = catClass[p.cat] || {c:'',t:''};
+  div.innerHTML = `
+    <div class="card-thumb ${cc.t}">
+      ${p.icon}
+      <div class="fav ${isFav?'active':''}" onclick="event.stopPropagation();toggleFav(${p.id})">${isFav?'♥':'♡'}</div>
+    </div>
+    <div class="card-body">
+      <div class="card-cat ${cc.c}">${p.cat}</div>
+      <div class="card-title">${p.title}</div>
+      <div class="card-vendor">${p.vendor}</div>
+      <div class="card-foot">
+        <span class="price">${p.price===0?'免費':'$'+p.price}</span>
+        ${p.tagLabel ? `<span class="tag ${p.tag}">${p.tagLabel}</span>` : `<span class="mono" style="font-size:11px;color:var(--muted)">庫存 ${p.stock}</span>`}
+      </div>
+    </div>`;
+  div.onclick = () => openProduct(p.id);
+  return div;
+}
+async function toggleFav(id){
+  if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  await sSet('favorites-list', Array.from(favorites), false);
+  renderProducts(currentCat);
+  renderFavorites();
+}
+function renderFavorites(){
+  const grid = document.getElementById('fav-grid');
+  const list = products.filter(p=>favorites.has(p.id));
+  document.getElementById('fav-count').textContent = list.length + ' 項';
+  document.getElementById('fav-empty').style.display = list.length? 'none':'block';
+  grid.innerHTML='';
+  list.forEach(p=>grid.appendChild(makeCard(p)));
+}
+function openProduct(id){
+  const p = products.find(x=>x.id===id);
+  const cc = catClass[p.cat] || {c:'',t:''};
+  qty = 1;
+  document.getElementById('product-modal').innerHTML = `
+    <button class="modal-close" onclick="closeProduct()">✕</button>
+    <div class="modal-handle"></div>
+    <div class="modal-layout">
+      <div class="modal-media"><div class="modal-thumb ${cc.t}">${p.icon}</div></div>
+      <div class="modal-info">
+        <h3>${p.title}</h3>
+        <div class="modal-vendor">${p.vendor} · ${p.cat}</div>
+        <div class="desc">${p.desc}</div>
+        <div class="modal-row"><span>單價</span><span class="mono">${p.price===0?'免費':'$'+p.price}</span></div>
+        <div class="modal-row"><span>目前庫存</span><span class="mono">${p.stock}</span></div>
+        ${p.stock>0 ? `
+        <div class="qty-row">
+          <span style="font-size:13px">購買數量</span>
+          <div class="qty-ctrl"><button onclick="changeQty(-1)">−</button><span id="qty-val">1</span><button onclick="changeQty(1)">+</button></div>
+        </div>
+        <button class="btn primary" onclick="confirmOrder(${p.id})">確認訂購</button>
+        ` : `<button class="btn ghost" disabled style="margin-top:16px;opacity:.5">已完售</button>`}
+      </div>
+    </div>`;
+  document.getElementById('product-overlay').classList.add('show');
+}
+function changeQty(d){ qty = Math.max(1, qty+d); document.getElementById('qty-val').textContent = qty; }
+function closeProduct(){ document.getElementById('product-overlay').classList.remove('show'); }
+async function confirmOrder(productId){
+  if(getAccessState()!=='approved'){ toast('請先完成註冊並通過審核才能下單', 'error'); return; }
+  const p = products.find(x=>x.id===productId);
+  const newId = 'ORD-' + (1000 + orders.length + 1);
+  const order = {id:newId, sid:profile.sid, name:profile.name, grade:profile.grade, title:p.title, qty, amount:p.price*qty, paid:false, picked:false, date:new Date().toISOString().slice(0,10)};
+  if(p.stock>0){ p.stock -= qty; if(p.stock===0){ p.tag='soldout'; p.tagLabel='已完售'; } await sSet('products-list', products, true); }
+  orders.unshift(order);
+  await sSet('orders-list', orders, true);
+  closeProduct();
+  toast('訂購成功!訂單編號 ' + newId);
+  renderOrders(); renderProducts(currentCat); renderFavorites();
+}
+function renderOrders(){
+  const mine = orders.filter(o=>profile && o.sid===profile.sid);
+  document.getElementById('orders-list').innerHTML = mine.map(o=>`
+    <div class="order-item">
+      <div><div class="oi-title">${o.title}</div><div class="oi-meta">${o.id} · 數量 ${o.qty} · $${o.amount} · ${o.date}</div></div>
+      <div class="status-pair">
+        <span class="pill ${o.paid?'paid':'unpaid'}">${o.paid?'已付款':'未付款'}</span>
+        <span class="pill ${o.picked?'done':'unpaid'}">${o.picked?'已取貨':'未取貨'}</span>
+      </div>
+    </div>`).join('') || '<div class="empty-state"><div class="es-icon">🧾</div><div class="es-text">目前還沒有訂單,去逛逛首頁商品吧</div></div>';
+}
+
+/* =========================================================
+   置頂公告
+========================================================= */
+function renderAnnouncements(){
+  document.getElementById('announce-count-txt').textContent = announcements.length;
+  document.getElementById('announce-row').innerHTML = announcements.map(a=>`
+    <div class="announce-card ${a.type}">
+      <div class="a-top"><span class="a-type">${a.label}</span><span class="a-date">${a.date}</span></div>
+      <h4>${a.title}</h4><p>${a.desc}</p>
+    </div>`).join('') || '<p class="cal-empty-msg">目前沒有公告。</p>';
+}
+
+/* =========================================================
+   行事曆
+========================================================= */
+function changeCalMonth(delta){ calMonthOffset += delta; calSelected = null; renderCalendar(); }
+function selectCalDate(d){ calSelected = d; renderCalendar(); }
+function renderCalendar(){
+  const base = new Date(2026, 8, 1);
+  const target = new Date(base.getFullYear(), base.getMonth()+calMonthOffset, 1);
+  const y = target.getFullYear(), m = target.getMonth();
+  const firstWeekday = target.getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  document.getElementById('cal-title').textContent = y+'年 '+(m+1)+'月';
+  let html = '';
+  for(let i=0;i<firstWeekday;i++) html += '<div class="cal-cell empty"></div>';
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const evs = calEvents[dateStr] || [];
+    const isToday = dateStr==='2026-09-12';
+    const isSelected = dateStr===calSelected;
+    const dots = evs.map(e=>`<span class="cal-dot dot-${calDotMap[e.cat]}"></span>`).join('');
+    html += `<div class="cal-cell ${isToday?'today':''} ${isSelected?'selected':''}" onclick="selectCalDate('${dateStr}')"><span class="cal-daynum">${d}</span><div class="cal-dots">${dots}</div></div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+  renderCalEventList();
+}
+function renderCalEventList(){
+  const list = document.getElementById('cal-event-list');
+  const titleEl = document.getElementById('cal-list-title');
+  if(!calSelected){
+    titleEl.textContent = '本月所有活動與截止日';
+    const all = Object.entries(calEvents).sort((a,b)=>a[0]<b[0]?-1:1);
+    list.innerHTML = all.map(([date, evs])=>evs.map(e=>`
+      <div class="cal-event-item"><span class="ce-dot dot-${calDotMap[e.cat]}"></span><span class="mono" style="color:var(--muted)">${date.slice(5).replace('-','/')}</span><span>${e.title}</span></div>`).join('')).join('') || '<p class="cal-empty-msg">本月尚無排定活動。</p>';
+    return;
+  }
+  titleEl.textContent = calSelected.slice(5).replace('-','/') + ' 當天';
+  const evs = calEvents[calSelected] || [];
+  list.innerHTML = evs.length ? evs.map(e=>`
+    <div class="cal-event-item"><span class="ce-dot dot-${calDotMap[e.cat]}"></span><span>${e.title}</span><span class="card-cat ${catClass[e.cat]?catClass[e.cat].c:''}" style="margin-left:auto">${e.cat}</span></div>`).join('') : '<p class="cal-empty-msg">這天沒有排定的活動或截止日期。</p>';
+}
+
+/* =========================================================
+   許願牆
+========================================================= */
+function toggleWishForm(){ document.getElementById('wish-form').classList.toggle('show'); }
+function renderWishes(){
+  const wrap = document.getElementById('wish-list');
+  const sorted = [...wishes].sort((a,b)=>b.votes-a.votes);
+  wrap.innerHTML = sorted.map(w=>`
+    <div class="wish-card">
+      <div class="vote-btn ${votedWishes.has(w.id)?'voted':''}" onclick="voteWish(${w.id})"><span>▲</span><span class="vn">${w.votes}</span></div>
+      <div style="flex:1">
+        <div class="wc-title">${w.title}</div>
+        <div class="wc-desc">${w.desc || ''}</div>
+        <div class="wc-meta">
+          <span class="card-cat ${catClass[w.cat] ? catClass[w.cat].c : ''}" style="${catClass[w.cat]?'':'background:#EDEAE2;color:var(--muted);'}">${w.cat}</span>
+          <span class="wish-status ${w.status}">${w.statusLabel}</span>
+        </div>
+      </div>
+    </div>`).join('') || '<div class="empty-state"><div class="es-icon">💡</div><div class="es-text">目前還沒有許願,當第一個提出想法的人吧</div></div>';
+}
+async function voteWish(id){
+  if(getAccessState()!=='approved'){ toast('請先完成註冊並通過審核才能附議', 'error'); return; }
+  const w = wishes.find(x=>x.id===id);
+  if(votedWishes.has(id)){ votedWishes.delete(id); w.votes -= 1; } else { votedWishes.add(id); w.votes += 1; }
+  await Promise.all([ sSet('wishes-list', wishes, true), sSet('voted-wishes-list', Array.from(votedWishes), false) ]);
+  renderWishes();
+}
+async function submitWish(){
+  if(getAccessState()!=='approved'){ toast('請先完成註冊並通過審核才能許願', 'error'); return; }
+  const title = document.getElementById('wish-title').value.trim();
+  if(!title){ toast('請先填寫想要的廠商或商品', 'error'); return; }
+  const cat = document.getElementById('wish-cat').value;
+  const desc = document.getElementById('wish-desc').value.trim();
+  const newId = Date.now();
+  wishes.unshift({id:newId, title, cat, desc, votes:1, status:'ws-pending', statusLabel:'待評估'});
+  votedWishes.add(newId);
+  await Promise.all([ sSet('wishes-list', wishes, true), sSet('voted-wishes-list', Array.from(votedWishes), false) ]);
+  document.getElementById('wish-title').value=''; document.getElementById('wish-desc').value='';
+  toggleWishForm();
+  toast('許願已送出,邀請大家來附議!');
+  renderWishes();
+}
+
+/* =========================================================
+   導覽
+========================================================= */
+function switchView(name){
+  ['home','favorites','orders','auth','wishes','calendar'].forEach(v=>{
+    document.getElementById('view-'+v).style.display = (v===name)?'block':'none';
+  });
+  document.querySelectorAll('.bn-item').forEach(x=>x.classList.toggle('active', x.dataset.nav===name));
+  document.querySelectorAll('.d-nav-item').forEach(x=>x.classList.toggle('active', x.dataset.nav===name));
+}
+document.querySelectorAll('.bn-item, .d-nav-item').forEach(el=>{
+  el.addEventListener('click', ()=>switchView(el.dataset.nav));
+});
+document.querySelectorAll('.cat-item, .chip').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    currentCat = el.dataset.cat;
+    document.querySelectorAll('.cat-item').forEach(x=>x.classList.toggle('active', x.dataset.cat===currentCat));
+    document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active', x.dataset.cat===currentCat));
+    renderProducts(currentCat);
+    switchView('home');
+  });
+});
+function toggleMobileSearch(){ document.getElementById('mobile-searchbar').classList.toggle('show'); }
+
+/* =========================================================
+   聊天(學生端)
+========================================================= */
+function toggleChat(){
+  const panel = document.getElementById('chat-panel');
+  panel.classList.toggle('show');
+  if(panel.classList.contains('show')) refreshChatView();
+}
+async function refreshChatView(){
+  chatThreads = await sGet('chat-threads', true, {});
+  const body = document.getElementById('chat-body');
+  const thread = (profile && chatThreads[profile.sid]) ? chatThreads[profile.sid].messages : [];
+  body.innerHTML = '<div class="msg them">您好,請問有什麼可以幫忙的嗎?</div>' +
+    thread.map(m=>`<div class="msg ${m.from==='me'?'me':'them'}">${m.text}</div>`).join('');
+  body.scrollTop = body.scrollHeight;
+}
+async function pushChatMsg(text, from){
+  if(!profile){ toast('請先完成註冊', 'error'); return; }
+  if(!chatThreads[profile.sid]) chatThreads[profile.sid] = {name:profile.name, messages:[]};
+  chatThreads[profile.sid].messages.push({from, text, ts:Date.now()});
+  await sSet('chat-threads', chatThreads, true);
+  refreshChatView();
+}
+function sendFaq(q){
+  pushChatMsg(q, 'me');
+  setTimeout(()=>{
+    const answers = {
+      '取貨地點在哪裡?':'取貨地點在系館一樓系辦公室,上班時間內皆可取貨。',
+      '可以用什麼方式付款?':'目前開放現場付款與轉帳兩種方式,轉帳後請於聊天室附上末五碼。',
+      '大約多久會出貨?':'一般商品約 3-5 個工作天到貨,會透過站內通知告知您。'
+    };
+    pushChatMsg(answers[q] || '已收到您的問題,將盡快回覆您。', 'admin');
+  }, 500);
+}
+function sendChat(){
+  const input = document.getElementById('chat-input');
+  if(!input.value.trim()) return;
+  pushChatMsg(input.value, 'me');
+  input.value='';
+}
+
+/* =========================================================
+   後台:通關密語進入 / 離開
+========================================================= */
+function promptAdminAccess(){
+  document.getElementById('admin-modal-content').innerHTML = `
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3>系辦管理登入</h3>
+    <div class="field"><label>通關密語</label><input id="admin-pass" type="password" placeholder="請輸入密語"></div>
+    <button class="btn primary" onclick="checkAdminPass()">進入後台</button>
+  `;
+  document.getElementById('admin-modal-overlay').classList.add('show');
+}
+function checkAdminPass(){
+  const val = document.getElementById('admin-pass').value;
+  if(val === ADMIN_PASSCODE){
+    isAdmin = true;
+    closeAdminModal();
+    document.getElementById('student-app').style.display='none';
+    document.getElementById('student-app').classList.remove('active');
+    document.getElementById('admin-app').style.display='block';
+    document.getElementById('admin-app').classList.add('active');
+    renderAllAdmin();
+    toast('已進入管理後台');
+  } else {
+    toast('密語錯誤', 'error');
+  }
+}
+function exitAdmin(){
+  document.getElementById('admin-app').style.display='none';
+  document.getElementById('admin-app').classList.remove('active');
+  document.getElementById('student-app').style.display='block';
+  document.getElementById('student-app').classList.add('active');
+  routeInitialScreen();
+}
+function closeAdminModal(){ document.getElementById('admin-modal-overlay').classList.remove('show'); }
+
+document.querySelectorAll('.a-nav-item').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.a-nav-item').forEach(x=>x.classList.toggle('active', x===el));
+    document.querySelectorAll('.a-view').forEach(v=>v.style.display='none');
+    document.getElementById('a-view-'+el.dataset.anav).style.display='block';
+    const titles = {dashboard:'儀表板', products:'商品管理', announcements:'公告管理', orders:'訂單管理', wishes:'許願牆', approvals:'帳號審核', messages:'學生訊息'};
+    document.getElementById('admin-title').textContent = titles[el.dataset.anav];
+  });
+});
+
+function renderAllAdmin(){
+  renderAdminDashboard();
+  renderAdminProducts();
+  renderAdminAnnouncements();
+  renderAdminOrders();
+  renderAdminWishes();
+  renderApprovals();
+  renderRoster();
+  renderAdminMessages();
+}
+function renderAdminDashboard(){
+  document.getElementById('stat-pending').textContent = pendingAccounts.length;
+  document.getElementById('stat-orders').textContent = orders.length;
+  document.getElementById('stat-msgs').textContent = Object.keys(chatThreads).length;
+  document.getElementById('stat-products').textContent = products.filter(p=>p.stock>0).length;
+  const counts = {};
+  orders.forEach(o=>{ counts[o.title] = (counts[o.title]||0)+1; });
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('admin-top-products').innerHTML = '<tr><th>商品</th><th>分類</th><th>已被訂購次數</th></tr>' +
+    (top.length ? top.map(([title,n])=>{
+      const prod = products.find(p=>p.title===title);
+      return `<tr><td>${title}</td><td>${prod?prod.cat:'-'}</td><td class="mono">${n}</td></tr>`;
+    }).join('') : '<tr><td colspan="3" class="mono" style="color:var(--muted)">尚無訂單資料</td></tr>');
+}
+
+/* ---- 商品管理 ---- */
+function renderAdminProducts(){
+  const table = document.getElementById('admin-product-table');
+  document.getElementById('product-count-lbl').textContent = '共 '+products.length+' 項商品';
+  table.innerHTML = '<tr><th>商品</th><th>分類</th><th>廠商</th><th>單價</th><th>庫存</th><th>狀態</th><th>操作</th></tr>' +
+    products.map(p=>`
+      <tr>
+        <td>${p.title}</td><td>${p.cat}</td><td>${p.vendor}</td>
+        <td class="mono">${p.price===0?'免費':'$'+p.price}</td>
+        <td class="mono">${p.stock}</td>
+        <td>${p.stock===0 ? '<span class="pill done">已完售</span>' : '<span class="pill paid">上架中</span>'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-sm outline" onclick="openProductForm(${p.id})">編輯</button>
+          <button class="btn-sm outline danger-text" onclick="deleteProduct(${p.id})">刪除</button>
+        </td>
+      </tr>`).join('');
+}
+function openProductForm(id){
+  const p = id ? products.find(x=>x.id===id) : null;
+  document.getElementById('admin-modal-content').innerHTML = `
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3>${p?'編輯商品':'新增商品'}</h3>
+    <div class="field"><label>標題</label><input id="pf-title" value="${p?p.title:''}" placeholder="例如:針筆繪圖工具組"></div>
+    <div class="field-row">
+      <div class="field"><label>分類</label><select id="pf-cat">${['廣告','書展','工具','材料','課程'].map(c=>`<option ${p&&p.cat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>圖示(emoji)</label><input id="pf-icon" value="${p?p.icon:'📦'}"></div>
+    </div>
+    <div class="field"><label>廠商名稱</label><input id="pf-vendor" value="${p?p.vendor:''}" placeholder="廠商/店家名稱"></div>
+    <div class="field-row">
+      <div class="field"><label>單價</label><input id="pf-price" type="number" value="${p?p.price:0}"></div>
+      <div class="field"><label>庫存</label><input id="pf-stock" type="number" value="${p?p.stock:10}"></div>
+    </div>
+    <div class="field"><label>說明</label><textarea id="pf-desc">${p?p.desc:''}</textarea></div>
+    <button class="btn primary" onclick="saveProduct(${p?p.id:'null'})">${p?'儲存變更':'新增商品'}</button>
+  `;
+  document.getElementById('admin-modal-overlay').classList.add('show');
+}
+async function saveProduct(id){
+  const title = document.getElementById('pf-title').value.trim();
+  if(!title){ toast('請輸入標題', 'error'); return; }
+  const cat = document.getElementById('pf-cat').value;
+  const icon = document.getElementById('pf-icon').value.trim() || '📦';
+  const vendor = document.getElementById('pf-vendor').value.trim();
+  const price = Number(document.getElementById('pf-price').value) || 0;
+  const stock = Number(document.getElementById('pf-stock').value) || 0;
+  const desc = document.getElementById('pf-desc').value.trim();
+  if(id){
+    const p = products.find(x=>x.id===id);
+    Object.assign(p, {title, cat, icon, vendor, price, stock, desc, tag: stock===0?'soldout':'', tagLabel: stock===0?'已完售':''});
+  } else {
+    const newId = Math.max(0,...products.map(x=>x.id), 0) + 1;
+    products.push({id:newId, title, cat, icon, vendor, price, stock, desc, tag:'', tagLabel:''});
+  }
+  await sSet('products-list', products, true);
+  closeAdminModal();
+  renderAdminProducts(); renderAdminDashboard(); renderProducts(currentCat); renderFavorites();
+  toast(id?'商品已更新':'商品已新增');
+}
+async function deleteProduct(id){
+  const p = products.find(x=>x.id===id);
+  if(!confirm(`確定要刪除「${p.title}」嗎?此動作無法復原。`)) return;
+  products = products.filter(x=>x.id!==id);
+  favorites.delete(id);
+  await Promise.all([ sSet('products-list', products, true), sSet('favorites-list', Array.from(favorites), false) ]);
+  renderAdminProducts(); renderAdminDashboard(); renderProducts(currentCat); renderFavorites();
+  toast('商品已刪除');
+}
+
+/* ---- 公告管理 ---- */
+function renderAdminAnnouncements(){
+  const table = document.getElementById('admin-announce-table');
+  document.getElementById('announce-count-lbl').textContent = '共 '+announcements.length+' 則公告';
+  table.innerHTML = '<tr><th>類型</th><th>標題</th><th>日期標示</th><th>說明</th><th>操作</th></tr>' +
+    announcements.map(a=>`
+      <tr>
+        <td><span class="a-type ${a.type}" style="display:inline-block">${a.label}</span></td>
+        <td>${a.title}</td><td class="mono">${a.date}</td>
+        <td style="max-width:220px;">${a.desc}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-sm outline" onclick="openAnnouncementForm(${a.id})">編輯</button>
+          <button class="btn-sm outline danger-text" onclick="deleteAnnouncement(${a.id})">刪除</button>
+        </td>
+      </tr>`).join('');
+}
+function openAnnouncementForm(id){
+  const a = id ? announcements.find(x=>x.id===id) : null;
+  const typeMap = [['a-important','重要提醒'],['a-event','活動快訊'],['a-notice','系務公告']];
+  document.getElementById('admin-modal-content').innerHTML = `
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3>${a?'編輯公告':'新增公告'}</h3>
+    <div class="field"><label>類型</label><select id="af-type">${typeMap.map(([v,l])=>`<option value="${v}" ${a&&a.type===v?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="field"><label>標題</label><input id="af-title" value="${a?a.title:''}" placeholder="公告標題"></div>
+    <div class="field"><label>日期標示文字</label><input id="af-date" value="${a?a.date:''}" placeholder="例如:09/20 截止"></div>
+    <div class="field"><label>說明</label><textarea id="af-desc">${a?a.desc:''}</textarea></div>
+    <button class="btn primary" onclick="saveAnnouncement(${a?a.id:'null'})">${a?'儲存變更':'新增公告'}</button>
+  `;
+  document.getElementById('admin-modal-overlay').classList.add('show');
+}
+async function saveAnnouncement(id){
+  const title = document.getElementById('af-title').value.trim();
+  if(!title){ toast('請輸入標題', 'error'); return; }
+  const type = document.getElementById('af-type').value;
+  const labelMap = {'a-important':'重要提醒','a-event':'活動快訊','a-notice':'系務公告'};
+  const date = document.getElementById('af-date').value.trim();
+  const desc = document.getElementById('af-desc').value.trim();
+  if(id){
+    const a = announcements.find(x=>x.id===id);
+    Object.assign(a, {type, label:labelMap[type], date, desc, title});
+  } else {
+    const newId = Math.max(0,...announcements.map(x=>x.id), 0) + 1;
+    announcements.push({id:newId, type, label:labelMap[type], date, title, desc});
+  }
+  await sSet('announcements-list', announcements, true);
+  closeAdminModal();
+  renderAdminAnnouncements(); renderAnnouncements();
+  toast(id?'公告已更新':'公告已新增');
+}
+async function deleteAnnouncement(id){
+  const a = announcements.find(x=>x.id===id);
+  if(!confirm(`確定要刪除公告「${a.title}」嗎?`)) return;
+  announcements = announcements.filter(x=>x.id!==id);
+  await sSet('announcements-list', announcements, true);
+  renderAdminAnnouncements(); renderAnnouncements();
+  toast('公告已刪除');
+}
+
+/* ---- 訂單管理 ---- */
+function renderAdminOrders(){
+  const body = document.getElementById('admin-orders-body');
+  const list = orders.filter(o=>currentGrade==='all' || o.grade===currentGrade);
+  document.getElementById('order-count-lbl').textContent = '共 '+list.length+' 筆訂單';
+  body.innerHTML = list.map(o=>`
+    <tr>
+      <td class="mono">${o.id}</td><td>${o.name}</td><td>${o.grade}</td><td>${o.title}</td>
+      <td class="mono">${o.qty}</td><td class="mono">$${o.amount}</td>
+      <td><button class="status-btn" style="border-color:${o.paid?'var(--green)':'var(--warn)'};color:${o.paid?'var(--green)':'var(--warn)'}" onclick="toggleOrderFlag('${o.id}','paid')">${o.paid?'已付款':'未付款'}</button></td>
+      <td><button class="status-btn" style="border-color:${o.picked?'var(--muted)':'var(--warn)'};color:${o.picked?'var(--muted)':'var(--warn)'}" onclick="toggleOrderFlag('${o.id}','picked')">${o.picked?'已取貨':'未取貨'}</button></td>
+    </tr>`).join('') || '<tr><td colspan="8" class="mono" style="color:var(--muted)">尚無訂單</td></tr>';
+}
+async function toggleOrderFlag(id, field){
+  const o = orders.find(x=>x.id===id);
+  o[field] = !o[field];
+  await sSet('orders-list', orders, true);
+  renderAdminOrders();
+}
+document.querySelectorAll('#grade-tabs .tab').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    currentGrade = el.dataset.grade;
+    document.querySelectorAll('#grade-tabs .tab').forEach(x=>x.classList.toggle('active', x===el));
+    renderAdminOrders();
+  });
+});
+function exportOrdersCsv(){
+  const rows = [['訂單編號','學生','學號','年級','商品','數量','金額','付款','取貨']];
+  orders.forEach(o=>rows.push([o.id,o.name,o.sid,o.grade,o.title,o.qty,o.amount,o.paid?'已付款':'未付款',o.picked?'已取貨':'未取貨']));
+  const csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '訂單清單.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('已匯出 CSV');
+}
+
+/* ---- 許願牆管理 ---- */
+function renderAdminWishes(){
+  const body = document.getElementById('admin-wishes-body');
+  const sorted = [...wishes].sort((a,b)=>b.votes-a.votes);
+  const cycle = {'ws-pending':['ws-contact','聯繫中'], 'ws-contact':['ws-live','已上架'], 'ws-live':['ws-pending','重新評估']};
+  body.innerHTML = sorted.map(w=>`
+    <tr>
+      <td>${w.title}${w.desc?'<div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px;">'+w.desc+'</div>':''}</td>
+      <td>${w.cat}</td><td class="mono">${w.votes}</td>
+      <td><span class="wish-status ${w.status}">${w.statusLabel}</span></td>
+      <td><button class="btn-sm outline" onclick="cycleWishStatus(${w.id})">標記為「${cycle[w.status][1]}」</button></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="mono" style="color:var(--muted)">尚無許願</td></tr>';
+}
+async function cycleWishStatus(id){
+  const w = wishes.find(x=>x.id===id);
+  const map = {'ws-pending':['ws-contact','系辦已聯繫中'], 'ws-contact':['ws-live','已上架商品'], 'ws-live':['ws-pending','待評估']};
+  const [next, label] = map[w.status];
+  w.status = next; w.statusLabel = label;
+  await sSet('wishes-list', wishes, true);
+  renderAdminWishes();
+  toast('已更新許願狀態');
+}
+
+/* ---- 帳號審核 ---- */
+function renderApprovals(){
+  document.getElementById('approvals-list').innerHTML = pendingAccounts.length ? pendingAccounts.map(s=>`
+    <div class="approve-row">
+      <div>
+        <div style="font-weight:700;font-size:13.5px;">${s.name} <span class="mono" style="color:var(--muted);font-weight:400;font-size:11.5px">${s.sid}</span></div>
+        <div style="font-size:11.5px;color:var(--muted);">${s.grade} · ${s.contact||'-'}</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-sm accent" onclick="approveStudent('${s.sid}')">通過</button>
+        <button class="btn-sm outline" onclick="rejectStudent('${s.sid}')">拒絕</button>
+      </div>
+    </div>`).join('') : '<p class="mono" style="color:var(--muted);font-size:13px;">目前沒有待審核帳號。</p>';
+}
+async function approveStudent(sid){
+  const rec = pendingAccounts.find(x=>x.sid===sid);
+  pendingAccounts = pendingAccounts.filter(x=>x.sid!==sid);
+  if(!approvedSids.includes(sid)) approvedSids.push(sid);
+  if(rec && !roster.find(r=>r.sid===sid)){
+    roster.push({sid:rec.sid, name:rec.name, grade:rec.grade, contact:rec.contact});
+  }
+  await Promise.all([ sSet('pending-accounts-list', pendingAccounts, true), sSet('approved-sids-list', approvedSids, true), sSet('roster-list', roster, true) ]);
+  renderApprovals(); renderRoster(); renderAdminDashboard();
+  toast('已核准該帳號');
+}
+async function rejectStudent(sid){
+  pendingAccounts = pendingAccounts.filter(x=>x.sid!==sid);
+  await sSet('pending-accounts-list', pendingAccounts, true);
+  renderApprovals(); renderAdminDashboard();
+  toast('已拒絕該申請');
+}
+
+function switchApprovalTab(tab, el){
+  document.querySelectorAll('#a-view-approvals .tab').forEach(x=>x.classList.toggle('active', x===el));
+  document.getElementById('approval-tab-pending').style.display = tab==='pending' ? 'block':'none';
+  document.getElementById('approval-tab-roster').style.display = tab==='roster' ? 'block':'none';
+}
+function renderRoster(){
+  const body = document.getElementById('roster-body');
+  body.innerHTML = roster.length ? roster.map(r=>`
+    <tr>
+      <td>${r.name}</td><td class="mono">${r.sid}</td><td>${r.grade}</td><td>${r.contact||'-'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-sm outline" onclick="openRosterForm('${r.sid}')">編輯</button>
+        <button class="btn-sm outline danger-text" onclick="revokeStudent('${r.sid}')">撤銷資格</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="5" class="mono" style="color:var(--muted)">目前沒有已核准的學生</td></tr>';
+}
+function openRosterForm(sid){
+  const r = roster.find(x=>x.sid===sid);
+  document.getElementById('admin-modal-content').innerHTML = `
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3>編輯學生資料</h3>
+    <div class="field"><label>學號(不可修改)</label><input value="${r.sid}" disabled></div>
+    <div class="field"><label>姓名</label><input id="rf-name" value="${r.name}"></div>
+    <div class="field"><label>年級</label>
+      <select id="rf-grade">${['大一','大二','大三','大四','研究所'].map(g=>`<option ${r.grade===g?'selected':''}>${g}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>聯絡方式</label><input id="rf-contact" value="${r.contact||''}"></div>
+    <button class="btn primary" onclick="saveRoster('${sid}')">儲存變更</button>
+  `;
+  document.getElementById('admin-modal-overlay').classList.add('show');
+}
+async function saveRoster(sid){
+  const r = roster.find(x=>x.sid===sid);
+  r.name = document.getElementById('rf-name').value.trim() || r.name;
+  r.grade = document.getElementById('rf-grade').value;
+  r.contact = document.getElementById('rf-contact').value.trim();
+  await sSet('roster-list', roster, true);
+  closeAdminModal();
+  renderRoster();
+  toast('已更新學生資料(僅系辦端記錄,不會覆蓋學生本人裝置上的資料)');
+}
+async function revokeStudent(sid){
+  const r = roster.find(x=>x.sid===sid);
+  if(!confirm(`確定要撤銷「${r?r.name:sid}」的資格嗎?撤銷後該學號需重新等待審核。`)) return;
+  roster = roster.filter(x=>x.sid!==sid);
+  approvedSids = approvedSids.filter(x=>x!==sid);
+  await Promise.all([ sSet('roster-list', roster, true), sSet('approved-sids-list', approvedSids, true) ]);
+  renderRoster(); renderAdminDashboard();
+  toast('已撤銷該學生資格');
+}
+
+/* ---- 學生訊息 ---- */
+function renderAdminMessages(){
+  const wrap = document.getElementById('admin-messages-list');
+  const sids = Object.keys(chatThreads);
+  if(!sids.length){ wrap.innerHTML = '<div class="msg-list-row"><span class="mono" style="color:var(--muted)">目前沒有學生訊息</span></div>'; return; }
+  wrap.innerHTML = sids.map(sid=>{
+    const t = chatThreads[sid];
+    const last = t.messages[t.messages.length-1];
+    return '<div class="msg-list-row" onclick="openThread(\''+sid+'\')"><span>'+(t.name || sid)+' · '+sid+'</span><span class="mono" style="color:var(--muted)">'+(last?last.text.slice(0,20):'')+'</span></div>';
+  }).join('');
+}
+function openThread(sid){
+  const t = chatThreads[sid] || {name:sid, messages:[]};
+  document.getElementById('admin-modal-content').innerHTML = `
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3>${t.name} · ${sid}</h3>
+    <div class="thread-msgs" id="thread-msgs">
+      ${t.messages.map(m=>`<div class="msg ${m.from==='admin'?'me':'them'}">${m.text}</div>`).join('') || '<p class="mono" style="color:var(--muted);font-size:12px;">目前沒有訊息</p>'}
+    </div>
+    <div class="field"><label>回覆訊息</label><input id="thread-reply" placeholder="輸入回覆內容"></div>
+    <button class="btn primary" onclick="sendAdminReply('${sid}')">送出回覆</button>
+  `;
+  document.getElementById('admin-modal-overlay').classList.add('show');
+}
+async function sendAdminReply(sid){
+  const input = document.getElementById('thread-reply');
+  const text = input.value.trim();
+  if(!text) return;
+  if(!chatThreads[sid]) chatThreads[sid] = {name:sid, messages:[]};
+  chatThreads[sid].messages.push({from:'admin', text, ts:Date.now()});
+  await sSet('chat-threads', chatThreads, true);
+  input.value='';
+  openThread(sid);
+  renderAdminMessages();
+  toast('已送出回覆');
+}
+
+/* =========================================================
+   響應式(依實際裝置寬度切換,非手動預覽)
+========================================================= */
+const mq = window.matchMedia('(min-width: 860px)');
+function applyViewport(){
+  const app = document.getElementById('app');
+  app.classList.remove('desktop','mobile');
+  app.classList.add(mq.matches ? 'desktop' : 'mobile');
+}
+mq.addEventListener('change', applyViewport);
+
+/* =========================================================
+   深色模式
+========================================================= */
+let themePref = 'light';
+async function loadTheme(){
+  themePref = await sGet('theme-pref', false, 'light');
+  applyTheme();
+}
+function applyTheme(){
+  document.body.setAttribute('data-theme', themePref);
+  document.getElementById('theme-toggle-btn').textContent = themePref==='dark' ? '☀️' : '🌙';
+}
+async function toggleTheme(){
+  themePref = themePref==='dark' ? 'light' : 'dark';
+  applyTheme();
+  await sSet('theme-pref', themePref, false);
+}
+
+/* =========================================================
+   啟動流程
+========================================================= */
+function toast(msg, type){
+  const t = document.getElementById('toast');
+  const icon = type==='error' ? '⚠️' : '✓';
+  t.innerHTML = '<span>'+icon+'</span><span>'+msg+'</span>';
+  t.className = 'toast show' + (type==='error' ? ' error' : '');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function minDelay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+(async function boot(){
+  applyViewport();
+  const authResult = await withTimeout(ensureAuth(), 8000);
+  if(authResult === '__timeout__' || !currentUid){
+    document.getElementById('splash').innerHTML = `
+      <div style="color:#fff;text-align:center;padding:0 24px;max-width:420px;">
+        <div style="font-size:40px;margin-bottom:14px;">⚠️</div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:10px;">無法連線到資料庫</div>
+        <div style="font-size:13px;line-height:1.8;opacity:.9;">
+          請檢查:<br>
+          1. 是否用 http(s):// 開啟(而非直接雙擊本機檔案 file://)<br>
+          2. Firebase 專案的「Authentication → 匿名」是否已啟用並儲存<br>
+          3. 打開瀏覽器 F12 主控台查看詳細錯誤訊息
+        </div>
+      </div>`;
+    return;
+  }
+  await Promise.all([ loadAllData(), loadTheme(), minDelay(1700) ]);
+  renderAnnouncements();
+  renderCalendar();
+  renderWishes();
+  renderProducts('all');
+  renderFavorites();
+  renderOrders();
+  document.getElementById('splash').classList.add('hide');
+  routeInitialScreen();
+})();
+</script>
+</body>
+</html>
