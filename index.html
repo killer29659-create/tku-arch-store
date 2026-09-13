@@ -100,7 +100,7 @@ button{font-family:inherit;cursor:pointer;}
   background:var(--ink);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:18px;position:sticky;top:0;z-index:30;
 }
 #student-app .logo{font-weight:700;font-size:17px;white-space:nowrap;display:flex;align-items:center;gap:8px;}
-.logo-mark{width:22px;height:22px;border:2px solid var(--p2);border-radius:6px;transform:rotate(45deg);flex-shrink:0;}
+.logo-mark{width:22px;height:22px;border:2px solid var(--p2);border-radius:6px;transform:rotate(45deg);flex-shrink:0;cursor:pointer;}
 #student-app .logo span{color:var(--p2);}
 .searchbar{
   flex:1;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);padding:8px 14px;border-radius:var(--r-full);
@@ -449,7 +449,7 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
       </div>
 
       <header class="topbar">
-        <div class="logo"><div class="logo-mark"></div>淡江建築<span>採購站</span></div>
+        <div class="logo"><div class="logo-mark" onclick="handleLogoTap()"></div>淡江建築<span>採購站</span></div>
         <div class="desktop-nav">
           <div class="d-nav-item active" data-nav="home">首頁</div>
           <div class="d-nav-item" data-nav="calendar">行事曆</div>
@@ -702,7 +702,6 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
   </div>
 </div>
 
-<div class="admin-entry" onclick="promptAdminAccess()">系辦管理入口</div>
 <div class="toast" id="toast"></div>
 
 <!-- ====== Firebase 設定區:請將下面的設定值換成你自己 Firebase 專案的內容 ====== -->
@@ -1201,6 +1200,22 @@ function sendChat(){
 /* =========================================================
    後台:通關密語進入 / 離開
 ========================================================= */
+let logoTapCount = 0, logoTapTimer = null;
+function handleLogoTap(){
+  logoTapCount++;
+  clearTimeout(logoTapTimer);
+  logoTapTimer = setTimeout(()=>{ logoTapCount = 0; }, 1500);
+  if(logoTapCount >= 5){
+    logoTapCount = 0;
+    promptAdminAccess();
+  }
+}
+document.addEventListener('keydown', (e)=>{
+  if(e.ctrlKey && e.shiftKey && (e.key==='A' || e.key==='a')){
+    e.preventDefault();
+    promptAdminAccess();
+  }
+});
 function promptAdminAccess(){
   document.getElementById('admin-modal-content').innerHTML = `
     <button class="modal-close" onclick="closeAdminModal()">✕</button>
