@@ -695,10 +695,11 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
                 <div class="tab" data-grade="研究所">研究所</div>
               </div>
               <div class="toolbar">
+                <input id="order-search" placeholder="搜尋學號或姓名..." oninput="handleOrderSearch(this.value)" style="flex:1;min-width:180px;padding:9px 13px;border:1.5px solid var(--ink);border-radius:var(--r-full);font-size:13px;font-family:inherit;background:var(--surface);">
                 <span class="mono" style="font-size:12px;color:var(--muted)" id="order-count-lbl">共 0 筆訂單</span>
                 <button class="btn-sm outline" onclick="exportOrdersCsv()">匯出 CSV</button>
               </div>
-              <div class="table-wrap"><table><thead><tr><th>訂單編號</th><th>學生</th><th>年級</th><th>商品</th><th>數量</th><th>金額</th><th>付款</th><th>取貨</th></tr></thead><tbody id="admin-orders-body"></tbody></table></div>
+              <div class="table-wrap"><table><thead><tr><th>訂單編號</th><th>學生</th><th>學號</th><th>年級</th><th>商品</th><th>數量</th><th>金額</th><th>付款</th><th>取貨</th><th>操作</th></tr></thead><tbody id="admin-orders-body"></tbody></table></div>
             </div>
 
             <div id="a-view-wishes" class="a-view" style="display:none">
@@ -867,6 +868,7 @@ let isAdmin=false;
 let currentCat='all';
 let calMonthOffset=0, calSelected='2026-09-12';
 let currentGrade='all';
+let orderSearchQuery='';
 let qty=1;
 
 async function loadAllData(){
@@ -1532,15 +1534,33 @@ async function deleteAnnouncement(id){
 /* ---- 訂單管理 ---- */
 function renderAdminOrders(){
   const body = document.getElementById('admin-orders-body');
-  const list = orders.filter(o=>currentGrade==='all' || o.grade===currentGrade);
+  let list = orders.filter(o=>currentGrade==='all' || o.grade===currentGrade);
+  if(orderSearchQuery){
+    const q = orderSearchQuery.toLowerCase();
+    list = list.filter(o => (o.sid||'').toLowerCase().includes(q) || (o.name||'').toLowerCase().includes(q));
+  }
   document.getElementById('order-count-lbl').textContent = '共 '+list.length+' 筆訂單';
   body.innerHTML = list.map(o=>`
     <tr>
-      <td class="mono">${o.id}</td><td>${o.name}</td><td>${o.grade}</td><td>${o.title}</td>
+      <td class="mono">${o.id}</td><td>${o.name}</td><td class="mono">${o.sid}</td><td>${o.grade}</td><td>${o.title}</td>
       <td class="mono">${o.qty}</td><td class="mono">$${o.amount}</td>
       <td><button class="status-btn" style="border-color:${o.paid?'var(--green)':'var(--warn)'};color:${o.paid?'var(--green)':'var(--warn)'}" onclick="toggleOrderFlag('${o.id}','paid')">${o.paid?'已付款':'未付款'}</button></td>
       <td><button class="status-btn" style="border-color:${o.picked?'var(--muted)':'var(--warn)'};color:${o.picked?'var(--muted)':'var(--warn)'}" onclick="toggleOrderFlag('${o.id}','picked')">${o.picked?'已取貨':'未取貨'}</button></td>
-    </tr>`).join('') || '<tr><td colspan="8" class="mono" style="color:var(--muted)">尚無訂單</td></tr>';
+      <td><button class="btn-sm outline danger-text" onclick="deleteOrder('${o.id}')">刪除</button></td>
+    </tr>`).join('') || '<tr><td colspan="10" class="mono" style="color:var(--muted)">找不到符合條件的訂單</td></tr>';
+}
+function handleOrderSearch(val){
+  orderSearchQuery = val.trim();
+  renderAdminOrders();
+}
+async function deleteOrder(id){
+  const o = orders.find(x=>x.id===id);
+  if(!confirm(`確定要刪除訂單「${o.id}」(${o.name} · ${o.title})嗎?此動作無法復原。`)) return;
+  orders = orders.filter(x=>x.id!==id);
+  await sSet('orders-list', orders, true);
+  renderAdminOrders();
+  renderAdminDashboard();
+  toast('訂單已刪除');
 }
 async function toggleOrderFlag(id, field){
   const o = orders.find(x=>x.id===id);
