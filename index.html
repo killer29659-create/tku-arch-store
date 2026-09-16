@@ -208,6 +208,19 @@ button{font-family:inherit;cursor:pointer;}
 .a-important{border-left-color:var(--p1);} .a-important .a-type{background:var(--pink-tint);color:var(--p1);}
 .a-event{border-left-color:var(--violet);} .a-event .a-type{background:var(--violet-tint);color:var(--violet);}
 .a-notice{border-left-color:var(--blue);} .a-notice .a-type{background:var(--blue-tint);color:var(--blue);}
+
+/* 評圖倒數 */
+.review-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:22px;}
+.app.mobile .review-grid{grid-template-columns:1fr;}
+.review-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow-sm);border-left-width:4px;}
+.review-card.rt-exchange{border-left-color:var(--blue);}
+.review-card.rt-formal{border-left-color:var(--p1);}
+.a-type.rt-exchange{background:var(--blue-tint);color:var(--blue);}
+.a-type.rt-formal{background:var(--pink-tint);color:var(--p1);}
+.review-card h4{font-size:13.5px;line-height:1.4;margin:8px 0 10px;}
+.review-countdown{font-family:'IBM Plex Mono';font-size:22px;font-weight:600;margin-bottom:4px;}
+.review-countdown.ended{color:var(--muted);font-size:15px;}
+.review-meta{font-size:11px;color:var(--muted);}
 .a-type.a-important{background:var(--pink-tint);color:var(--p1);}
 .a-type.a-event{background:var(--violet-tint);color:var(--violet);}
 .a-type.a-notice{background:var(--blue-tint);color:var(--blue);}
@@ -491,6 +504,20 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
           <!-- HOME VIEW -->
           <section id="view-home" class="view">
             <div class="section-label">
+              <h2>評圖倒數</h2>
+              <span class="count mono" id="review-count-txt">0 場</span>
+            </div>
+            <div class="tabs" id="review-tabs">
+              <div class="tab active" data-grade="all">全部</div>
+              <div class="tab" data-grade="大一">大一</div>
+              <div class="tab" data-grade="大二">大二</div>
+              <div class="tab" data-grade="大三">大三</div>
+              <div class="tab" data-grade="大四">大四</div>
+              <div class="tab" data-grade="研究所">研究所</div>
+            </div>
+            <div class="review-grid" id="review-grid"></div>
+
+            <div class="section-label">
               <h2>置頂公告</h2>
               <span class="count mono">📌 <span id="announce-count-txt">0</span> 則</span>
             </div>
@@ -620,6 +647,7 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
           <div class="a-nav-item" data-anav="orders">訂單管理</div>
           <div class="a-nav-item" data-anav="wishes">許願牆</div>
           <div class="a-nav-item" data-anav="calendar">行事曆管理</div>
+          <div class="a-nav-item" data-anav="reviews">評圖倒數管理</div>
           <div class="a-nav-item" data-anav="approvals">帳號審核</div>
           <div class="a-nav-item" data-anav="messages">學生訊息</div>
         </aside>
@@ -684,6 +712,14 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
                 <button class="btn-sm accent" onclick="openCalEventForm()">+ 新增活動</button>
               </div>
               <div class="table-wrap"><table><thead><tr><th>日期</th><th>標題</th><th>分類</th><th>操作</th></tr></thead><tbody id="admin-calevents-body"></tbody></table></div>
+            </div>
+
+            <div id="a-view-reviews" class="a-view" style="display:none">
+              <div class="toolbar">
+                <span class="mono" style="font-size:12px;color:var(--muted)" id="review-admin-count-lbl">共 0 場評圖</span>
+                <button class="btn-sm accent" onclick="openReviewForm()">+ 新增評圖</button>
+              </div>
+              <div class="table-wrap"><table><thead><tr><th>年級</th><th>類型</th><th>標題</th><th>日期時間</th><th>操作</th></tr></thead><tbody id="admin-reviews-body"></tbody></table></div>
             </div>
 
             <div id="a-view-approvals" class="a-view" style="display:none">
@@ -804,6 +840,12 @@ const defaultWishes = [
   {id:3, title:'二手製圖工具交流', cat:'其他', desc:'學長姐畢業後的工具/材料可以在這裡讓學弟妹接手。', votes:11, status:'ws-pending', statusLabel:'待評估'},
   {id:4, title:'雷切板材團購(更多尺寸)', cat:'材料', desc:'希望材料行能提供更大尺寸的椴木板團購選項。', votes:7, status:'ws-live', statusLabel:'已上架商品'},
 ];
+const defaultReviewEvents = [
+  {id:1, grade:'大一', type:'exchange', title:'設計課期中交流評', datetime:'2026-10-06T09:00'},
+  {id:2, grade:'大二', type:'formal', title:'期中正評', datetime:'2026-10-08T13:00'},
+  {id:3, grade:'大三', type:'formal', title:'設計課期末正評', datetime:'2026-10-20T09:00'},
+  {id:4, grade:'大四', type:'exchange', title:'畢業設計期中交流評', datetime:'2026-10-15T13:00'},
+];
 const defaultCalEvents = [
   {id:1, date:'2026-09-12', title:'採購站新版上線', cat:'廣告'},
   {id:2, date:'2026-09-15', title:'手繪透視工作坊報名截止', cat:'廣告'},
@@ -818,7 +860,8 @@ const calDotMap = {'廣告':'ad','書展':'book','工具':'tool','材料':'mat',
 /* =========================================================
    應用程式狀態(啟動時從雲端載入)
 ========================================================= */
-let products=[], announcements=[], wishes=[], orders=[], pendingAccounts=[], approvedSids=[], chatThreads={}, roster=[], calEvents=[];
+let products=[], announcements=[], wishes=[], orders=[], pendingAccounts=[], approvedSids=[], chatThreads={}, roster=[], calEvents=[], reviewEvents=[];
+let reviewGradeFilter = 'all';
 let profile=null, favorites=new Set(), votedWishes=new Set();
 let isAdmin=false;
 let currentCat='all';
@@ -827,7 +870,7 @@ let currentGrade='all';
 let qty=1;
 
 async function loadAllData(){
-  const [p,a,w,o,pa,as,ct,rl,ce] = await Promise.all([
+  const [p,a,w,o,pa,as,ct,rl,ce,re] = await Promise.all([
     sGet('products-list', true, null),
     sGet('announcements-list', true, null),
     sGet('wishes-list', true, null),
@@ -837,11 +880,13 @@ async function loadAllData(){
     sGet('chat-threads', true, {}),
     sGet('roster-list', true, []),
     sGet('cal-events-list', true, null),
+    sGet('review-events-list', true, null),
   ]);
   products = p!==null ? p : (await seedIfEmpty('products-list', defaultProducts));
   announcements = a!==null ? a : (await seedIfEmpty('announcements-list', defaultAnnouncements));
   wishes = w!==null ? w : (await seedIfEmpty('wishes-list', defaultWishes));
   calEvents = ce!==null ? ce : (await seedIfEmpty('cal-events-list', defaultCalEvents));
+  reviewEvents = re!==null ? re : (await seedIfEmpty('review-events-list', defaultReviewEvents));
   orders = o; pendingAccounts = pa; approvedSids = as; chatThreads = ct; roster = rl;
 
   const [prof, fav, vw] = await Promise.all([
@@ -1042,6 +1087,46 @@ function renderOrders(){
 /* =========================================================
    置頂公告
 ========================================================= */
+/* =========================================================
+   評圖倒數
+========================================================= */
+function renderReviews(){
+  const grid = document.getElementById('review-grid');
+  const now = new Date();
+  let list = reviewEvents.filter(r=>reviewGradeFilter==='all' || r.grade===reviewGradeFilter);
+  list = [...list].sort((a,b)=> new Date(a.datetime) - new Date(b.datetime));
+  document.getElementById('review-count-txt').textContent = list.length + ' 場';
+  grid.innerHTML = list.map(r=>{
+    const target = new Date(r.datetime);
+    const diff = target - now;
+    let countdownText, ended = diff<=0;
+    if(ended){ countdownText = '已結束'; }
+    else{
+      const days = Math.floor(diff/86400000);
+      const hours = Math.floor((diff%86400000)/3600000);
+      const mins = Math.floor((diff%3600000)/60000);
+      countdownText = days>0 ? `${days}天 ${hours}小時` : (hours>0 ? `${hours}小時 ${mins}分` : `${mins}分鐘`);
+    }
+    const typeClass = r.type==='formal' ? 'rt-formal' : 'rt-exchange';
+    const typeLabel = r.type==='formal' ? '正評' : '交流評';
+    const dateStr = `${target.getMonth()+1}/${target.getDate()} ${String(target.getHours()).padStart(2,'0')}:${String(target.getMinutes()).padStart(2,'0')}`;
+    return `
+    <div class="review-card ${typeClass}">
+      <div class="a-top"><span class="a-type ${typeClass}">${typeLabel}</span><span class="a-date">${r.grade}</span></div>
+      <h4>${r.title}</h4>
+      <div class="review-countdown ${ended?'ended':''}">${countdownText}</div>
+      <div class="review-meta mono">${dateStr}</div>
+    </div>`;
+  }).join('') || '<p class="cal-empty-msg" style="grid-column:1/-1;">目前沒有排定的評圖。</p>';
+}
+document.querySelectorAll('#review-tabs .tab').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    reviewGradeFilter = el.dataset.grade;
+    document.querySelectorAll('#review-tabs .tab').forEach(x=>x.classList.toggle('active', x===el));
+    renderReviews();
+  });
+});
+
 function renderAnnouncements(){
   document.getElementById('announce-count-txt').textContent = announcements.length;
   document.getElementById('announce-row').innerHTML = announcements.map(a=>`
@@ -1272,7 +1357,7 @@ document.querySelectorAll('.a-nav-item').forEach(el=>{
     document.querySelectorAll('.a-nav-item').forEach(x=>x.classList.toggle('active', x===el));
     document.querySelectorAll('.a-view').forEach(v=>v.style.display='none');
     document.getElementById('a-view-'+el.dataset.anav).style.display='block';
-    const titles = {dashboard:'儀表板', products:'商品管理', announcements:'公告管理', orders:'訂單管理', wishes:'許願牆', calendar:'行事曆管理', approvals:'帳號審核', messages:'學生訊息'};
+    const titles = {dashboard:'儀表板', products:'商品管理', announcements:'公告管理', orders:'訂單管理', wishes:'許願牆', calendar:'行事曆管理', reviews:'評圖倒數管理', approvals:'帳號審核', messages:'學生訊息'};
     document.getElementById('admin-title').textContent = titles[el.dataset.anav];
   });
 });
@@ -1284,6 +1369,7 @@ function renderAllAdmin(){
   renderAdminOrders();
   renderAdminWishes();
   renderAdminCalEvents();
+  renderAdminReviews();
   renderApprovals();
   renderRoster();
   renderAdminMessages();
@@ -1565,6 +1651,76 @@ async function deleteCalEvent(id){
   renderCalendar();
   toast('活動已刪除');
 }
+
+/* ---- 評圖倒數管理 ---- */
+function renderAdminReviews(){
+  const body = document.getElementById('admin-reviews-body');
+  document.getElementById('review-admin-count-lbl').textContent = '共 '+reviewEvents.length+' 場評圖';
+  const sorted = [...reviewEvents].sort((a,b)=> new Date(a.datetime) - new Date(b.datetime));
+  body.innerHTML = sorted.map(r=>{
+    const dt = new Date(r.datetime);
+    const dtLabel = `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    return `
+    <tr>
+      <td>${r.grade}</td>
+      <td><span class="a-type ${r.type==='formal'?'rt-formal':'rt-exchange'}" style="display:inline-block">${r.type==='formal'?'正評':'交流評'}</span></td>
+      <td>${r.title}</td>
+      <td class="mono">${dtLabel}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-sm outline" onclick="openReviewForm(${r.id})">編輯</button>
+        <button class="btn-sm outline danger-text" onclick="deleteReview(${r.id})">刪除</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="mono" style="color:var(--muted)">尚無評圖排程</td></tr>';
+}
+function openReviewForm(id){
+  const r = id ? reviewEvents.find(x=>x.id===id) : null;
+  document.getElementById('admin-modal-content').innerHTML = `
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3>${r?'編輯評圖':'新增評圖'}</h3>
+    <div class="field"><label>年級</label>
+      <select id="rvf-grade">${['大一','大二','大三','大四','研究所'].map(g=>`<option ${r&&r.grade===g?'selected':''}>${g}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>類型</label>
+      <select id="rvf-type">
+        <option value="exchange" ${r&&r.type==='exchange'?'selected':''}>交流評</option>
+        <option value="formal" ${r&&r.type==='formal'?'selected':''}>正評</option>
+      </select>
+    </div>
+    <div class="field"><label>標題</label><input id="rvf-title" value="${r?r.title:''}" placeholder="例如:設計課期末正評"></div>
+    <div class="field"><label>日期時間</label><input id="rvf-datetime" type="datetime-local" value="${r?r.datetime:'2026-10-06T09:00'}"></div>
+    <button class="btn primary" onclick="saveReview(${r?r.id:'null'})">${r?'儲存變更':'新增評圖'}</button>
+  `;
+  document.getElementById('admin-modal-overlay').classList.add('show');
+}
+async function saveReview(id){
+  const grade = document.getElementById('rvf-grade').value;
+  const type = document.getElementById('rvf-type').value;
+  const title = document.getElementById('rvf-title').value.trim();
+  const datetime = document.getElementById('rvf-datetime').value;
+  if(!title || !datetime){ toast('請填寫標題與日期時間', 'error'); return; }
+  if(id){
+    const r = reviewEvents.find(x=>x.id===id);
+    Object.assign(r, {grade, type, title, datetime});
+  } else {
+    const newId = Math.max(0,...reviewEvents.map(x=>x.id), 0) + 1;
+    reviewEvents.push({id:newId, grade, type, title, datetime});
+  }
+  await sSet('review-events-list', reviewEvents, true);
+  closeAdminModal();
+  renderAdminReviews();
+  renderReviews();
+  toast(id?'評圖已更新':'評圖已新增');
+}
+async function deleteReview(id){
+  const r = reviewEvents.find(x=>x.id===id);
+  if(!confirm(`確定要刪除「${r.title}」這筆評圖嗎?`)) return;
+  reviewEvents = reviewEvents.filter(x=>x.id!==id);
+  await sSet('review-events-list', reviewEvents, true);
+  renderAdminReviews();
+  renderReviews();
+  toast('評圖已刪除');
+}
 function openWishForm(id){
   const w = wishes.find(x=>x.id===id);
   document.getElementById('admin-modal-content').innerHTML = `
@@ -1792,6 +1948,8 @@ function minDelay(ms){ return new Promise(r=>setTimeout(r,ms)); }
   }
   await Promise.all([ loadAllData(), loadTheme(), minDelay(1700) ]);
   renderAnnouncements();
+  renderReviews();
+  setInterval(renderReviews, 60000);
   renderCalendar();
   renderWishes();
   renderProducts('all');
