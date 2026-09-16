@@ -26,6 +26,10 @@
   --orange-tint:#FFEEDA;
   --pink:#FF5FA2;
   --pink-tint:#FFE3F0;
+  --teal:#0E9594;
+  --teal-tint:#DDF3F2;
+  --gold:#C9922B;
+  --gold-tint:#F7ECD6;
   --warn:#B8862F;
   --warn-tint:#FBEED4;
   --shadow: 0 12px 28px rgba(21,23,28,.14);
@@ -183,8 +187,10 @@ button{font-family:inherit;cursor:pointer;}
 .c-tool{background:var(--green-tint);color:var(--green);}
 .c-mat{background:var(--orange-tint);color:#B36B00;}
 .c-course{background:var(--pink-tint);color:#C81C6E;}
-.dot-ad{background:var(--violet);} .dot-book{background:var(--blue);} .dot-tool{background:var(--green);} .dot-mat{background:var(--orange);} .dot-course{background:var(--pink);}
-.thumb-ad{background:var(--violet-tint);} .thumb-book{background:var(--blue-tint);} .thumb-tool{background:var(--green-tint);} .thumb-mat{background:var(--orange-tint);} .thumb-course{background:var(--pink-tint);}
+.c-holiday{background:var(--gold-tint);color:#8A6416;}
+.c-event{background:var(--teal-tint);color:var(--teal);}
+.dot-ad{background:var(--violet);} .dot-book{background:var(--blue);} .dot-tool{background:var(--green);} .dot-mat{background:var(--orange);} .dot-course{background:var(--pink);} .dot-holiday{background:var(--gold);} .dot-event{background:var(--teal);}
+.thumb-ad{background:var(--violet-tint);} .thumb-book{background:var(--blue-tint);} .thumb-tool{background:var(--green-tint);} .thumb-mat{background:var(--orange-tint);} .thumb-course{background:var(--pink-tint);} .thumb-holiday{background:var(--gold-tint);} .thumb-event{background:var(--teal-tint);}
 
 /* announcements */
 .announce-row{display:flex;gap:12px;overflow-x:auto;margin-bottom:22px;padding-bottom:2px;}
@@ -772,7 +778,7 @@ async function sSet(key, val, shared){
 /* =========================================================
    預設種子資料(僅在第一次啟動、雲端尚無資料時使用)
 ========================================================= */
-const catClass = {'廣告':{c:'c-ad',t:'thumb-ad'}, '書展':{c:'c-book',t:'thumb-book'}, '工具':{c:'c-tool',t:'thumb-tool'}, '材料':{c:'c-mat',t:'thumb-mat'}, '課程':{c:'c-course',t:'thumb-course'}};
+const catClass = {'廣告':{c:'c-ad',t:'thumb-ad'}, '書展':{c:'c-book',t:'thumb-book'}, '工具':{c:'c-tool',t:'thumb-tool'}, '材料':{c:'c-mat',t:'thumb-mat'}, '課程':{c:'c-course',t:'thumb-course'}, '假期':{c:'c-holiday',t:'thumb-holiday'}, '活動':{c:'c-event',t:'thumb-event'}};
 const ADMIN_PASSCODE = 'tku2026'; // 系辦可自行更改此通關密語
 
 const defaultProducts = [
@@ -807,7 +813,7 @@ const defaultCalEvents = [
   {id:6, date:'2026-09-25', title:'雷切板材包開始取貨', cat:'材料'},
   {id:7, date:'2026-09-25', title:'模型攝影課程開課', cat:'課程'},
 ];
-const calDotMap = {'廣告':'ad','書展':'book','工具':'tool','材料':'mat','課程':'course'};
+const calDotMap = {'廣告':'ad','書展':'book','工具':'tool','材料':'mat','課程':'course','假期':'holiday','活動':'event'};
 
 /* =========================================================
    應用程式狀態(啟動時從雲端載入)
@@ -1526,7 +1532,7 @@ function openCalEventForm(id){
     <div class="field"><label>日期</label><input id="cf-date" type="date" value="${e?e.date:'2026-09-12'}"></div>
     <div class="field"><label>標題</label><input id="cf-title" value="${e?e.title:''}" placeholder="例如:書展預購截止"></div>
     <div class="field"><label>分類</label>
-      <select id="cf-cat">${['廣告','書展','工具','材料','課程'].map(c=>`<option ${e&&e.cat===c?'selected':''}>${c}</option>`).join('')}</select>
+      <select id="cf-cat">${['廣告','書展','工具','材料','課程','假期','活動'].map(c=>`<option ${e&&e.cat===c?'selected':''}>${c}</option>`).join('')}</select>
     </div>
     <button class="btn primary" onclick="saveCalEvent(${e?e.id:'null'})">${e?'儲存變更':'新增活動'}</button>
   `;
