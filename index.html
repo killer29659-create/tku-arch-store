@@ -613,6 +613,7 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
           <div class="a-nav-item" data-anav="announcements">公告管理</div>
           <div class="a-nav-item" data-anav="orders">訂單管理</div>
           <div class="a-nav-item" data-anav="wishes">許願牆</div>
+          <div class="a-nav-item" data-anav="calendar">行事曆管理</div>
           <div class="a-nav-item" data-anav="approvals">帳號審核</div>
           <div class="a-nav-item" data-anav="messages">學生訊息</div>
         </aside>
@@ -669,6 +670,14 @@ th{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-transform:
             <div id="a-view-wishes" class="a-view" style="display:none">
               <div class="toolbar"><span class="mono" style="font-size:12px;color:var(--muted)">依附議數排序</span></div>
               <div class="table-wrap"><table><thead><tr><th>許願內容</th><th>分類</th><th>附議數</th><th>狀態</th><th>操作</th></tr></thead><tbody id="admin-wishes-body"></tbody></table></div>
+            </div>
+
+            <div id="a-view-calendar" class="a-view" style="display:none">
+              <div class="toolbar">
+                <span class="mono" style="font-size:12px;color:var(--muted)" id="calevent-count-lbl">共 0 筆活動</span>
+                <button class="btn-sm accent" onclick="openCalEventForm()">+ 新增活動</button>
+              </div>
+              <div class="table-wrap"><table><thead><tr><th>日期</th><th>標題</th><th>分類</th><th>操作</th></tr></thead><tbody id="admin-calevents-body"></tbody></table></div>
             </div>
 
             <div id="a-view-approvals" class="a-view" style="display:none">
@@ -789,20 +798,21 @@ const defaultWishes = [
   {id:3, title:'二手製圖工具交流', cat:'其他', desc:'學長姐畢業後的工具/材料可以在這裡讓學弟妹接手。', votes:11, status:'ws-pending', statusLabel:'待評估'},
   {id:4, title:'雷切板材團購(更多尺寸)', cat:'材料', desc:'希望材料行能提供更大尺寸的椴木板團購選項。', votes:7, status:'ws-live', statusLabel:'已上架商品'},
 ];
-const calEvents = {
-  '2026-09-12': [{title:'採購站新版上線', cat:'廣告'}],
-  '2026-09-15': [{title:'手繪透視工作坊報名截止', cat:'廣告'}],
-  '2026-09-17': [{title:'雷切機全天維護,暫停預約', cat:'工具'}],
-  '2026-09-20': [{title:'2026建築書展預購截止', cat:'書展'}],
-  '2026-09-22': [{title:'Rhino/Grasshopper密集班開課', cat:'課程'}],
-  '2026-09-25': [{title:'雷切板材包開始取貨', cat:'材料'}, {title:'模型攝影課程開課', cat:'課程'}],
-};
+const defaultCalEvents = [
+  {id:1, date:'2026-09-12', title:'採購站新版上線', cat:'廣告'},
+  {id:2, date:'2026-09-15', title:'手繪透視工作坊報名截止', cat:'廣告'},
+  {id:3, date:'2026-09-17', title:'雷切機全天維護,暫停預約', cat:'工具'},
+  {id:4, date:'2026-09-20', title:'2026建築書展預購截止', cat:'書展'},
+  {id:5, date:'2026-09-22', title:'Rhino/Grasshopper密集班開課', cat:'課程'},
+  {id:6, date:'2026-09-25', title:'雷切板材包開始取貨', cat:'材料'},
+  {id:7, date:'2026-09-25', title:'模型攝影課程開課', cat:'課程'},
+];
 const calDotMap = {'廣告':'ad','書展':'book','工具':'tool','材料':'mat','課程':'course'};
 
 /* =========================================================
    應用程式狀態(啟動時從雲端載入)
 ========================================================= */
-let products=[], announcements=[], wishes=[], orders=[], pendingAccounts=[], approvedSids=[], chatThreads={}, roster=[];
+let products=[], announcements=[], wishes=[], orders=[], pendingAccounts=[], approvedSids=[], chatThreads={}, roster=[], calEvents=[];
 let profile=null, favorites=new Set(), votedWishes=new Set();
 let isAdmin=false;
 let currentCat='all';
@@ -811,7 +821,7 @@ let currentGrade='all';
 let qty=1;
 
 async function loadAllData(){
-  const [p,a,w,o,pa,as,ct,rl] = await Promise.all([
+  const [p,a,w,o,pa,as,ct,rl,ce] = await Promise.all([
     sGet('products-list', true, null),
     sGet('announcements-list', true, null),
     sGet('wishes-list', true, null),
@@ -820,10 +830,12 @@ async function loadAllData(){
     sGet('approved-sids-list', true, []),
     sGet('chat-threads', true, {}),
     sGet('roster-list', true, []),
+    sGet('cal-events-list', true, null),
   ]);
   products = p!==null ? p : (await seedIfEmpty('products-list', defaultProducts));
   announcements = a!==null ? a : (await seedIfEmpty('announcements-list', defaultAnnouncements));
   wishes = w!==null ? w : (await seedIfEmpty('wishes-list', defaultWishes));
+  calEvents = ce!==null ? ce : (await seedIfEmpty('cal-events-list', defaultCalEvents));
   orders = o; pendingAccounts = pa; approvedSids = as; chatThreads = ct; roster = rl;
 
   const [prof, fav, vw] = await Promise.all([
@@ -1064,7 +1076,7 @@ function renderCalendar(){
   for(let i=0;i<firstWeekday;i++) html += '<div class="cal-cell empty"></div>';
   for(let d=1; d<=daysInMonth; d++){
     const dateStr = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const evs = calEvents[dateStr] || [];
+    const evs = calEvents.filter(e=>e.date===dateStr);
     const isToday = dateStr==='2026-09-12';
     const isSelected = dateStr===calSelected;
     const dots = evs.map(e=>`<span class="cal-dot dot-${calDotMap[e.cat]}"></span>`).join('');
@@ -1078,13 +1090,13 @@ function renderCalEventList(){
   const titleEl = document.getElementById('cal-list-title');
   if(!calSelected){
     titleEl.textContent = '本月所有活動與截止日';
-    const all = Object.entries(calEvents).sort((a,b)=>a[0]<b[0]?-1:1);
-    list.innerHTML = all.map(([date, evs])=>evs.map(e=>`
-      <div class="cal-event-item"><span class="ce-dot dot-${calDotMap[e.cat]}"></span><span class="mono" style="color:var(--muted)">${date.slice(5).replace('-','/')}</span><span>${e.title}</span></div>`).join('')).join('') || '<p class="cal-empty-msg">本月尚無排定活動。</p>';
+    const all = [...calEvents].sort((a,b)=>a.date<b.date?-1:1);
+    list.innerHTML = all.map(e=>`
+      <div class="cal-event-item"><span class="ce-dot dot-${calDotMap[e.cat]}"></span><span class="mono" style="color:var(--muted)">${e.date.slice(5).replace('-','/')}</span><span>${e.title}</span></div>`).join('') || '<p class="cal-empty-msg">本月尚無排定活動。</p>';
     return;
   }
   titleEl.textContent = calSelected.slice(5).replace('-','/') + ' 當天';
-  const evs = calEvents[calSelected] || [];
+  const evs = calEvents.filter(e=>e.date===calSelected);
   list.innerHTML = evs.length ? evs.map(e=>`
     <div class="cal-event-item"><span class="ce-dot dot-${calDotMap[e.cat]}"></span><span>${e.title}</span><span class="card-cat ${catClass[e.cat]?catClass[e.cat].c:''}" style="margin-left:auto">${e.cat}</span></div>`).join('') : '<p class="cal-empty-msg">這天沒有排定的活動或截止日期。</p>';
 }
@@ -1254,7 +1266,7 @@ document.querySelectorAll('.a-nav-item').forEach(el=>{
     document.querySelectorAll('.a-nav-item').forEach(x=>x.classList.toggle('active', x===el));
     document.querySelectorAll('.a-view').forEach(v=>v.style.display='none');
     document.getElementById('a-view-'+el.dataset.anav).style.display='block';
-    const titles = {dashboard:'儀表板', products:'商品管理', announcements:'公告管理', orders:'訂單管理', wishes:'許願牆', approvals:'帳號審核', messages:'學生訊息'};
+    const titles = {dashboard:'儀表板', products:'商品管理', announcements:'公告管理', orders:'訂單管理', wishes:'許願牆', calendar:'行事曆管理', approvals:'帳號審核', messages:'學生訊息'};
     document.getElementById('admin-title').textContent = titles[el.dataset.anav];
   });
 });
@@ -1265,6 +1277,7 @@ function renderAllAdmin(){
   renderAdminAnnouncements();
   renderAdminOrders();
   renderAdminWishes();
+  renderAdminCalEvents();
   renderApprovals();
   renderRoster();
   renderAdminMessages();
@@ -1487,6 +1500,64 @@ async function cycleWishStatus(id){
   await sSet('wishes-list', wishes, true);
   renderAdminWishes();
   toast('已更新許願狀態');
+}
+
+/* ---- 行事曆管理 ---- */
+function renderAdminCalEvents(){
+  const body = document.getElementById('admin-calevents-body');
+  document.getElementById('calevent-count-lbl').textContent = '共 '+calEvents.length+' 筆活動';
+  const sorted = [...calEvents].sort((a,b)=>a.date<b.date?-1:1);
+  body.innerHTML = sorted.map(e=>`
+    <tr>
+      <td class="mono">${e.date}</td>
+      <td>${e.title}</td>
+      <td><span class="card-cat ${catClass[e.cat]?catClass[e.cat].c:''}" style="${catClass[e.cat]?'':'background:#EDEAE2;color:var(--muted);'}">${e.cat}</span></td>
+      <td style="white-space:nowrap;">
+        <button class="btn-sm outline" onclick="openCalEventForm(${e.id})">編輯</button>
+        <button class="btn-sm outline danger-text" onclick="deleteCalEvent(${e.id})">刪除</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="4" class="mono" style="color:var(--muted)">尚無行事曆活動</td></tr>';
+}
+function openCalEventForm(id){
+  const e = id ? calEvents.find(x=>x.id===id) : null;
+  document.getElementById('admin-modal-content').innerHTML = `
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3>${e?'編輯活動':'新增活動'}</h3>
+    <div class="field"><label>日期</label><input id="cf-date" type="date" value="${e?e.date:'2026-09-12'}"></div>
+    <div class="field"><label>標題</label><input id="cf-title" value="${e?e.title:''}" placeholder="例如:書展預購截止"></div>
+    <div class="field"><label>分類</label>
+      <select id="cf-cat">${['廣告','書展','工具','材料','課程'].map(c=>`<option ${e&&e.cat===c?'selected':''}>${c}</option>`).join('')}</select>
+    </div>
+    <button class="btn primary" onclick="saveCalEvent(${e?e.id:'null'})">${e?'儲存變更':'新增活動'}</button>
+  `;
+  document.getElementById('admin-modal-overlay').classList.add('show');
+}
+async function saveCalEvent(id){
+  const date = document.getElementById('cf-date').value;
+  const title = document.getElementById('cf-title').value.trim();
+  const cat = document.getElementById('cf-cat').value;
+  if(!date || !title){ toast('請填寫日期與標題', 'error'); return; }
+  if(id){
+    const e = calEvents.find(x=>x.id===id);
+    Object.assign(e, {date, title, cat});
+  } else {
+    const newId = Math.max(0,...calEvents.map(x=>x.id), 0) + 1;
+    calEvents.push({id:newId, date, title, cat});
+  }
+  await sSet('cal-events-list', calEvents, true);
+  closeAdminModal();
+  renderAdminCalEvents();
+  renderCalendar();
+  toast(id?'活動已更新':'活動已新增');
+}
+async function deleteCalEvent(id){
+  const e = calEvents.find(x=>x.id===id);
+  if(!confirm(`確定要刪除「${e.title}」這筆活動嗎?`)) return;
+  calEvents = calEvents.filter(x=>x.id!==id);
+  await sSet('cal-events-list', calEvents, true);
+  renderAdminCalEvents();
+  renderCalendar();
+  toast('活動已刪除');
 }
 function openWishForm(id){
   const w = wishes.find(x=>x.id===id);
